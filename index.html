@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>毛概选择题 · 逐轮智能刷题</title>
+<title>毛概刷题 · 选择题 + 大题自测</title>
 <style>
   :root{
     --bg:#f6f8fb; --card:#ffffff; --card2:#f1f4f9; --line:#e3e8f0;
@@ -32,6 +32,12 @@
   .btn.ghost:hover{border-color:var(--acc);color:var(--acc);background:var(--acc-soft)}
   .btn.gold{background:var(--gold);box-shadow:0 2px 8px rgba(217,154,23,.25)}
   .btn.gold:hover{background:#bf850f}
+  .btn.ok{background:var(--ok);box-shadow:0 2px 8px rgba(22,176,122,.25)}
+  .btn.ok:hover{background:#0f9163}
+  .btn.warn{background:var(--warn);box-shadow:0 2px 8px rgba(224,138,30,.25)}
+  .btn.warn:hover{background:#c2761a}
+  .btn.bad{background:var(--bad);box-shadow:0 2px 8px rgba(239,77,94,.25)}
+  .btn.bad:hover{background:#d83b4b}
   .btn.sm{padding:6px 13px;font-size:13px;font-weight:500}
   .btn:disabled{opacity:.4;cursor:not-allowed;box-shadow:none}
   .chip{display:inline-flex;align-items:center;gap:6px;background:#fff;
@@ -40,7 +46,11 @@
   .chip:hover{border-color:#c3d0e6}
   .chip.on{background:var(--acc);border-color:var(--acc);color:#fff;box-shadow:0 2px 8px rgba(47,109,240,.25)}
   .chip.on .mini{color:rgba(255,255,255,.8)}
-  .stat{display:flex;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--mut)}
+  .seg{display:inline-flex;background:var(--card2);border-radius:12px;padding:4px;gap:4px;margin-bottom:16px}
+  .seg button{border:none;background:transparent;padding:9px 20px;border-radius:9px;font-size:15px;
+    font-weight:600;cursor:pointer;color:var(--mut)}
+  .seg button.on{background:#fff;color:var(--acc);box-shadow:var(--shadow)}
+  .stat{display:flex;gap:20px;flex-wrap:wrap;font-size:13px;color:var(--mut);align-items:center}
   .stat b{color:var(--fg);font-size:17px;font-weight:700}
   .bar{height:9px;background:var(--card2);border-radius:99px;overflow:hidden;margin:12px 0 2px}
   .bar>i{display:block;height:100%;border-radius:99px;
@@ -49,6 +59,7 @@
   .tag{padding:3px 9px;border-radius:7px;font-size:11px;font-weight:700}
   .tag.single{background:var(--acc-soft);color:var(--acc)}
   .tag.multi{background:var(--warn-soft);color:var(--warn)}
+  .tag.essay{background:var(--gold-soft);color:var(--gold)}
   .tag.focus{background:var(--bad-soft);color:var(--bad)}
   .tag.mark{background:var(--gold-soft);color:var(--gold)}
   .stem{font-size:17px;font-weight:600;margin:4px 0 18px;line-height:1.65}
@@ -85,7 +96,17 @@
   .markbtn.on{background:var(--gold);color:#fff}
   .review-item{border-bottom:1px solid var(--line);padding:12px 0}
   .review-item:last-child{border:none}
-  /* answer card modal */
+  .ta{width:100%;min-height:120px;border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;
+    font-size:15px;font-family:inherit;line-height:1.7;resize:vertical;background:#fff;color:var(--fg)}
+  .ta:focus{outline:none;border-color:var(--acc)}
+  .ansbox{white-space:pre-wrap;background:var(--ok-soft);border:1px solid var(--ok);border-radius:12px;
+    padding:14px 16px;font-size:14.5px;line-height:1.8;margin-top:10px;color:#0d5e42}
+  .simbox{border-radius:12px;padding:14px 16px;margin-top:8px;border:1px solid var(--line);background:var(--card2)}
+  .simnum{font-size:30px;font-weight:800}
+  .kw{display:inline-block;padding:3px 10px;border-radius:8px;font-size:13px;margin:3px 5px 3px 0;font-weight:600}
+  .kw.hit{background:var(--ok-soft);color:#0d7a55;border:1px solid var(--ok)}
+  .kw.miss{background:#eef1f6;color:var(--mut);border:1px solid var(--line)}
+  .selfrate{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
   .mask{position:fixed;inset:0;background:rgba(20,30,50,.45);display:flex;
     align-items:flex-end;justify-content:center;z-index:50}
   .sheet{background:var(--card);width:100%;max-width:820px;border-radius:18px 18px 0 0;
@@ -97,6 +118,7 @@
   .cell:hover{border-color:var(--acc)}
   .cell.ok{background:var(--ok-soft);border-color:var(--ok);color:var(--ok)}
   .cell.bad{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+  .cell.warn{background:var(--warn-soft);border-color:var(--warn);color:var(--warn)}
   .cell.cur{outline:2.5px solid var(--acc);outline-offset:1px}
   .cell .dot{position:absolute;top:3px;right:3px;width:6px;height:6px;border-radius:50%;background:var(--gold)}
   .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--mut);margin-top:4px}
@@ -106,47 +128,79 @@
 <body>
 <div class="wrap">
 
-  <!-- ====== SETUP ====== -->
-  <section id="setup">
-    <h1>毛概选择题 · 逐轮智能刷题</h1>
-    <div class="sub">逐题作答 → 记住你的错题 → 下一轮优先重点提问，直到全部掌握。进度自动保存在本机。</div>
+  <!-- ====== HOME ====== -->
+  <section id="home">
+    <h1>毛概刷题 · 选择题 + 大题自测</h1>
+    <div class="sub">逐题练习，记住薄弱点，下一轮重点攻克。进度自动保存在本机。</div>
+    <div class="seg">
+      <button id="segChoice" class="on" onclick="switchMode('choice')">选择题</button>
+      <button id="segDati" onclick="switchMode('dati')">大题自测</button>
+    </div>
 
-    <div class="card">
-      <h2>选择章节（章节练习）</h2>
-      <div class="row" id="chapChips"></div>
-      <div class="row" style="margin-top:12px">
-        <button class="btn sm ghost" onclick="selAll(true)">全选</button>
-        <button class="btn sm ghost" onclick="selAll(false)">清空</button>
+    <!-- 选择题 setup -->
+    <div id="choiceSetup">
+      <div class="card">
+        <h2>选择章节</h2>
+        <div class="row" id="chapChips"></div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn sm ghost" onclick="selAll(true)">全选</button>
+          <button class="btn sm ghost" onclick="selAll(false)">清空</button>
+        </div>
+      </div>
+      <div class="card">
+        <h2>出题设置</h2>
+        <label class="chip" id="optShuffleQ"><input type="checkbox" checked style="accent-color:var(--acc)"> 打乱题目顺序</label>
+        <label class="chip" id="optShuffleO"><input type="checkbox" checked style="accent-color:var(--acc)"> 打乱选项顺序</label>
+        <div class="mini" style="margin-top:10px">掌握标准：同一题<b id="masterN">连续答对 2 次</b>即视为掌握、退出题池。
+          <a class="link" onclick="cycleMaster()">切换(1/2/3)</a></div>
+      </div>
+      <div class="card">
+        <div class="stat" id="resumeStat"></div>
+        <div class="row" style="margin-top:14px">
+          <button class="btn" onclick="startSession('all')">开始 / 继续章节练习</button>
+          <button class="btn ghost sm" onclick="resetAll()">清空全部进度</button>
+        </div>
+      </div>
+      <div class="card" style="border-color:var(--gold);background:var(--gold-soft)">
+        <h2 style="color:var(--gold)">选择题错题集</h2>
+        <div class="mini" id="wrongStat" style="margin-bottom:12px"></div>
+        <div class="row">
+          <button class="btn gold" onclick="startSession('wrong')">开始刷错题集</button>
+          <button class="btn ghost sm" onclick="showWrongBook()">查看 / 管理</button>
+        </div>
       </div>
     </div>
 
-    <div class="card">
-      <h2>出题设置</h2>
-      <label class="chip" id="optShuffleQ"><input type="checkbox" checked style="accent-color:var(--acc)"> 打乱题目顺序</label>
-      <label class="chip" id="optShuffleO"><input type="checkbox" checked style="accent-color:var(--acc)"> 打乱选项顺序</label>
-      <div class="mini" style="margin-top:10px">掌握标准：同一题<b id="masterN">连续答对 2 次</b>即视为掌握、退出题池。
-        <a class="link" onclick="cycleMaster()">切换(1/2/3)</a></div>
-    </div>
-
-    <div class="card">
-      <div class="stat" id="resumeStat"></div>
-      <div class="row" style="margin-top:14px">
-        <button class="btn" onclick="startSession('all')">开始 / 继续章节练习</button>
-        <button class="btn ghost sm" onclick="resetAll()">清空全部进度</button>
+    <!-- 大题 setup -->
+    <div id="datiSetup" class="hide">
+      <div class="card">
+        <h2>选择章节</h2>
+        <div class="row" id="dChapChips"></div>
+        <div class="row" style="margin-top:12px">
+          <button class="btn sm ghost" onclick="dSelAll(true)">全选</button>
+          <button class="btn sm ghost" onclick="dSelAll(false)">清空</button>
+        </div>
+        <div class="mini" style="margin-top:10px">玩法：看题默写 → 提交对照算关键词覆盖率，或直接看答案 → 自评<b>掌握/模糊/不会</b>，模糊与不会进下一轮重点。</div>
       </div>
-    </div>
-
-    <div class="card" style="border-color:var(--gold);background:var(--gold-soft)">
-      <h2 style="color:var(--gold)">错题集</h2>
-      <div class="mini" id="wrongStat" style="margin-bottom:12px"></div>
-      <div class="row">
-        <button class="btn gold" onclick="startSession('wrong')">开始刷错题集</button>
-        <button class="btn ghost sm" onclick="showWrongBook()">查看 / 管理错题集</button>
+      <div class="card">
+        <div class="stat" id="dResumeStat"></div>
+        <div class="row" style="margin-top:14px">
+          <button class="btn" onclick="startDati('all')">开始 / 继续大题自测</button>
+          <button class="btn ghost sm" onclick="resetDati()">清空大题进度</button>
+        </div>
+      </div>
+      <div class="card" style="border-color:var(--gold);background:var(--gold-soft)">
+        <h2 style="color:var(--gold)">大题错题集</h2>
+        <div class="mini" id="dWrongStat" style="margin-bottom:12px"></div>
+        <div class="row">
+          <button class="btn gold" onclick="startDati('wrong')">开始刷大题错题集</button>
+          <button class="btn ghost sm" onclick="showDatiBook()">查看 / 管理</button>
+        </div>
       </div>
     </div>
   </section>
 
-  <!-- ====== QUIZ ====== -->
+  <!-- ====== CHOICE QUIZ ====== -->
   <section id="quiz" class="hide">
     <div class="card">
       <div class="stat">
@@ -158,12 +212,46 @@
       </div>
       <div class="bar"><i id="prog"></i></div>
     </div>
-
     <div class="card">
       <div class="qmeta" id="qmeta"></div>
       <div class="stem" id="stem"></div>
       <div id="opts"></div>
       <div id="feed"></div>
+    </div>
+  </section>
+
+  <!-- ====== DATI QUIZ ====== -->
+  <section id="datiQuiz" class="hide">
+    <div class="card">
+      <div class="stat">
+        <span id="dModeLabel"></span>
+        <span>本轮 <b id="dPos">0</b>/<b id="dLen">0</b></span>
+        <span id="dPoolWrap">题池剩 <b id="dPoolLeft">0</b></span>
+        <a class="link" style="margin-left:auto;font-size:13px" onclick="dOpenCard()">答题卡</a>
+      </div>
+      <div class="bar"><i id="dProg"></i></div>
+    </div>
+    <div class="card">
+      <div class="qmeta" id="dQmeta"></div>
+      <div class="stem" id="dTitle"></div>
+      <div id="dInputWrap">
+        <textarea id="dTa" class="ta" placeholder="在此默写 / 作答要点（可留空，直接点“看答案”）"></textarea>
+        <div class="row" style="margin-top:10px">
+          <button class="btn" onclick="datiSubmit()">提交对照</button>
+          <button class="btn ghost" onclick="datiReveal(false)">直接看答案</button>
+        </div>
+      </div>
+      <div id="dReveal" class="hide">
+        <div id="dSim"></div>
+        <div class="mini" style="margin-top:14px;font-weight:600;color:var(--fg)">标准答案要点</div>
+        <div class="ansbox" id="dAns"></div>
+        <div class="mini" style="margin-top:14px">对照后自评：</div>
+        <div class="selfrate">
+          <button class="btn ok" onclick="datiRate('掌握')">掌握</button>
+          <button class="btn warn" onclick="datiRate('模糊')">模糊</button>
+          <button class="btn bad" onclick="datiRate('不会')">不会</button>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -173,18 +261,18 @@
       <div class="big" id="rdTitle">本轮完成</div>
       <div id="rdBody" class="sub"></div>
       <div class="row" style="justify-content:center;margin-top:8px">
-        <button class="btn" id="rdNext" onclick="nextRound()">下一轮</button>
-        <button class="btn ghost" onclick="toSetup()">返回主页</button>
+        <button class="btn" id="rdNext" onclick="rdNextAction()">下一轮</button>
+        <button class="btn ghost" onclick="toHome()">返回主页</button>
       </div>
     </div>
   </section>
 
-  <!-- ====== WRONG BOOK ====== -->
+  <!-- ====== CHOICE WRONG BOOK ====== -->
   <section id="wrongBook" class="hide">
     <div class="card">
       <div class="row" style="justify-content:space-between">
-        <h2 style="margin:0">错题集管理</h2>
-        <button class="btn ghost sm" onclick="toSetup()">返回</button>
+        <h2 style="margin:0">选择题错题集</h2>
+        <button class="btn ghost sm" onclick="toHome()">返回</button>
       </div>
       <div class="row" style="margin:12px 0">
         <button class="btn gold sm" onclick="startSession('wrong')">开始刷错题集</button>
@@ -193,9 +281,24 @@
       <div id="wbBody"></div>
     </div>
   </section>
+
+  <!-- ====== DATI BOOK ====== -->
+  <section id="datiBook" class="hide">
+    <div class="card">
+      <div class="row" style="justify-content:space-between">
+        <h2 style="margin:0">大题错题集</h2>
+        <button class="btn ghost sm" onclick="toHome()">返回</button>
+      </div>
+      <div class="row" style="margin:12px 0">
+        <button class="btn gold sm" onclick="startDati('wrong')">开始刷大题错题集</button>
+        <button class="btn ghost sm" onclick="clearDatiSet()">清空大题错题集</button>
+      </div>
+      <div id="dbBody"></div>
+    </div>
+  </section>
 </div>
 
-<!-- ====== ANSWER CARD MODAL ====== -->
+<!-- ====== ANSWER CARD (CHOICE) ====== -->
 <div id="cardMask" class="mask hide" onclick="if(event.target===this)closeCard()">
   <div class="sheet">
     <div class="row" style="justify-content:space-between">
@@ -215,10 +318,30 @@
   </div>
 </div>
 
-<!-- ====== FOOTER ACTION BAR ====== -->
+<!-- ====== ANSWER CARD (DATI) ====== -->
+<div id="dCardMask" class="mask hide" onclick="if(event.target===this)dCloseCard()">
+  <div class="sheet">
+    <div class="row" style="justify-content:space-between">
+      <h2 style="margin:0">答题卡 · 点击跳转</h2>
+      <button class="btn ghost sm" onclick="dCloseCard()">关闭</button>
+    </div>
+    <div class="grid" id="dCardGrid"></div>
+    <div class="legend">
+      <span><i style="background:var(--ok-soft);border:1px solid var(--ok)"></i>掌握</span>
+      <span><i style="background:var(--warn-soft);border:1px solid var(--warn)"></i>模糊</span>
+      <span><i style="background:var(--bad-soft);border:1px solid var(--bad)"></i>不会</span>
+      <span><i style="background:#fff;border:1px solid var(--line)"></i>未自评</span>
+    </div>
+    <div class="row" style="margin-top:16px;justify-content:center">
+      <button class="btn" onclick="dFinishRound()">结束本轮 · 查看成绩</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== FOOTER (CHOICE) ====== -->
 <div class="foot hide" id="footer">
   <div class="wrap">
-    <button class="btn ghost sm" onclick="toSetup()">退出</button>
+    <button class="btn ghost sm" onclick="toHome()">退出</button>
     <div class="row">
       <button class="btn ghost sm" id="prevBtn" onclick="goPrev()">上一题</button>
       <button class="btn ghost sm" onclick="openCard()">答题卡</button>
@@ -227,43 +350,65 @@
   </div>
 </div>
 
+<!-- ====== FOOTER (DATI) ====== -->
+<div class="foot hide" id="dFooter">
+  <div class="wrap">
+    <button class="btn ghost sm" onclick="toHome()">退出</button>
+    <div class="row">
+      <button class="btn ghost sm" id="dPrevBtn" onclick="dGoPrev()">上一题</button>
+      <button class="btn ghost sm" onclick="dOpenCard()">答题卡</button>
+      <button class="btn ghost sm" id="dNextBtn" onclick="dGoNext()">下一题</button>
+    </div>
+  </div>
+</div>
+
 <script>
 const QUESTIONS = [{"chapter": "导论", "type": "single", "num": 1, "stem": "（）给中国送来了马克思列宁主义，给苦苦探寻救亡图存出路的中国人民指明了前进方向、提供了全新选择。", "options": {"A": "鸦片战争", "B": "新文化运动", "C": "五四运动", "D": "十月革命"}, "answer": "D", "analysis": ""}, {"chapter": "导论", "type": "single", "num": 2, "stem": "1938 年，（）在党的六届六中全会上作了《论新阶段》的报告，强调：“没有抽象的马克思主义，只有具体的马克思主义……”", "options": {"A": "毛泽东", "B": "任弼时", "C": "刘少奇", "D": "周恩来"}, "answer": "A", "analysis": "1938 年10 月，毛泽东在中国共产党第六届中央委员会第六次全体会议的政治报告《论新阶段》中指出：离开中国特点来谈马克思主义，只是抽象的空洞的马克思主义。"}, {"chapter": "导论", "type": "single", "num": 3, "stem": "党的十八大以来，以习近平同志为核心的党中央明确提出要不断推进（）。", "options": {"A": "社会主义现代化", "B": "马克思主义中国化时代化", "C": "“两个结合”", "D": "社会主义现代化强国"}, "answer": "B", "analysis": ""}, {"chapter": "导论", "type": "single", "num": 4, "stem": "（）明确把“不断谱写马克思主义中国化时代化新篇章”作为当代中国共产党人的庄严历史责任，并提出了继续推进马克思主义中国化时代化的新要求。", "options": {"A": "党的十七大", "B": "党的十八大", "C": "党的十九大", "D": "党的二十大"}, "answer": "D", "analysis": ""}, {"chapter": "导论", "type": "single", "num": 5, "stem": "（）是马克思主义中国化时代化的第一次历史性飞跃。", "options": {"A": "毛泽东思想", "B": "邓小平理论", "C": "“三个代表”重要思想", "D": "科学发展观"}, "answer": "A", "analysis": ""}, {"chapter": "导论", "type": "single", "num": 6, "stem": "马克思主义中国化时代化的理论成果是一脉相承又（）的关系。", "options": {"A": "实事求是", "B": "与时俱进", "C": "独立自主", "D": "精益求精"}, "answer": "B", "analysis": ""}, {"chapter": "导论", "type": "single", "num": 7, "stem": "马克思主义中国化时代化的最新理论成果是（）。", "options": {"A": "毛泽东思想", "B": "科学发展观", "C": "习近平新时代中国特色社会主义思想", "D": "邓小平理论"}, "answer": "C", "analysis": ""}, {"chapter": "导论", "type": "single", "num": 8, "stem": "（）的召开，实现了新中国成立以来党的历史上具有深远意义的伟大转折，开启了改革开放和社会主义现代化建设历史新时期。", "options": {"A": "中共十一届三中全会", "B": "中共十二大", "C": "中共十三大", "D": "中共十一届六中全会"}, "answer": "A", "analysis": ""}, {"chapter": "导论", "type": "single", "num": 9, "stem": "中国特色社会主义理论体系不包括（）。", "options": {"A": "邓小平理论", "B": "科学发展观", "C": "习近平新时代中国特色社会主义思想", "D": "毛泽东思想"}, "answer": "D", "analysis": ""}, {"chapter": "导论", "type": "single", "num": 10, "stem": "中国共产党一经诞生，就把为中国人民谋幸福、为中华民族谋复兴确立为自己的初心使命。一百年来，中国共产党团结带领中国人民进行的一切奋斗、一切牺牲、一切创造，归结起来就是一个主题（）。", "options": {"A": "实现共同富裕", "B": "实现全面建成小康社会", "C": "实现社会主义现代化", "D": "实现中华民族伟大复兴"}, "answer": "D", "analysis": ""}, {"chapter": "导论", "type": "multi", "num": 1, "stem": "准确把握马克思主义中国化时代化的科学内涵，要做到坚持（）与（）相统一。", "options": {"A": "马克思主义", "B": "发展马克思主义", "C": "社会主义", "D": "中国特色社会主义"}, "answer": "AB", "analysis": ""}, {"chapter": "导论", "type": "multi", "num": 2, "stem": "推进马克思主义中国化时代化，是（）。", "options": {"A": "马克思主义唯物史观的要求", "B": "马克思主义理论本身发展的内在要求", "C": "解决中国实际问题的客观需要", "D": "社会主义经济社会发展的需要"}, "answer": "BC", "analysis": "见2023 版教材3-4 页。"}, {"chapter": "导论", "type": "multi", "num": 3, "stem": "坚持和发展马克思主义，必须（）。", "options": {"A": "同中国具体实际相结合", "B": "同中华优秀传统文化相结合", "C": "同社会主义现代化发展相结合", "D": "同中华民族伟大复兴相结合"}, "answer": "AB", "analysis": "见2023 版教材第4 页"}, {"chapter": "导论", "type": "multi", "num": 5, "stem": "实践证明，中国共产党为什么能，中国特色社会主义为什么好，归根到底是（）。", "options": {"A": "马克思主义经典作家行", "B": "科学社会主义行", "C": "马克思主义行", "D": "中国化时代化的马克思主义行"}, "answer": "CD", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 1, "stem": "毛泽东思想形成和发展的时代背景是:（）", "options": {"A": "中国沦为半殖民地半封建社会", "B": "战争与革命成为时代主题", "C": "第一次世界大战的爆发", "D": "中国工人阶级的成长壮大"}, "answer": "B", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 2, "stem": "1917 年()的胜利开辟了世界无产阶级社会主义革命的新时代，也给中国送来了马克思列宁主义", "options": {"A": "俄国十月革命", "B": "五四运动", "C": "中国共产党建立", "D": "中华人民共和国建立"}, "answer": "A", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 3, "stem": "毛泽东思想作为马克思主义中国化的第一个重大理论成果，是由一系列相互联系的重要理论观点所构成的完整的科学思想体系。这一科学思想体系所围绕的主题是（）", "options": {"A": ",中国命运和前途", "B": "中国革命和建设", "C": "中国社会性质和阶级状况", "D": "中国改革和发展"}, "answer": "B", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 4, "stem": "标志着毛泽东思想开始萌芽的是（）", "options": {"A": "新民主主义革命基本思想的提出", "B": "农村包围城市、武装夺取政权的思想的提出并深入阐述", "C": "系统阐述新民主主义革命理论", "D": "形成社会主义革命和社会主义建设的重要思想"}, "answer": "A", "analysis": "详见教材第17 页：大革命时期，“这些关于新民主主义革命基本思想的提出，标志着毛泽东思想开始萌芽。”"}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 5, "stem": "标志着毛泽东思想初步形成的是（）", "options": {"A": "新民主主义革命基本思想的提出", "B": "农村包围城市、武装夺取政权的思想的提出并深入阐述", "C": "系统阐述新民主主义革命理论", "D": "形成社会主义革命和社会主义建设的重要思想"}, "answer": "B", "analysis": "详见教材第17 页：土地革命战争时期，“毛泽东提出并深入阐述的农村包围城市、武装夺取政权的思想，……标志着毛泽东思想的初步形成。"}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 5, "stem": "标志着毛泽东思想得到多方面展开而趋于成熟的是（）", "options": {"A": "新民主主义革命基本思想的提出", "B": "农村包围城市、武装夺取政权的思想的提出并深入阐述", "C": "系统阐述新民主主义革命理论", "D": "形成社会主义革命和社会主义建设的重要思想"}, "answer": "C", "analysis": "详见教材第18 页：遵义会议以后，“毛泽东在对革命实践经验和教训科学总结的基础上，系统阐述了新民主主义革命理论……标志着毛泽东思想得到多方面展开而趋于成熟。"}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 7, "stem": "()把毛泽东思想确立为党必须长期坚持的指导思想并写入党章。", "options": {"A": "遵义会议", "B": "党的六届六中全会", "C": "党的七大", "D": "党的七届二中全会"}, "answer": "C", "analysis": "经过六届七中全会的酝酿和讨论，1945 年党的七大通过的《中国共产党党章》明确规定，“中国共产党，以马克思列宁主义的理论与中国革命的实践之统一的思想——毛泽东思想，作为自己一切工作的指针”。这标志着把毛泽东思想确立为党必须长期坚持的指导思想。"}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 8, "stem": "中国的武装斗争是无产阶级领导下的以()为主体的革命战争。", "options": {"A": "工人", "B": "农民", "C": "城市小资产阶级", "D": "知识分子"}, "answer": "B", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 9, "stem": "()指出:“全党已经空前一致地认识了毛泽东同志的路线的正确性，空前自觉地团结在毛泽东的旗帜下了。”", "options": {"A": "《九月来信》", "B": "《关于若干历史问题的决议》", "C": "《中国共产党党章》", "D": "《论人民民主专政》"}, "answer": "B", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 10, "stem": "在革命军队建设和军事战略的理论中，毛泽东规定了（）的原则，强调全心全意为人民服务是人民军队的唯一宗旨。", "options": {"A": "党对军队绝对领导", "B": "密切联系群众", "C": "艰苦奋斗", "D": "理论联系实际"}, "answer": "A", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 11, "stem": "中国共产党历史上，第一次使用“毛泽东思想的活的灵魂”的表述是在:()", "options": {"A": "《反对本本主义》", "B": "《关于若干历史问题的决议》", "C": "《关于修改党章的报告》", "D": "《关于建国以来党的若干历史问题的决议》"}, "answer": "D", "analysis": "1981 年党的十一届六中全会通过的《中国共产党中央委员会关于建国以来党的若干历史问题的决议》指出：“毛泽东思想的活的灵魂，是贯穿于上述各个组成部分的立场、观点和方法，他们有三个基本方面，即实事求是，群众路线，独立自主。”"}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 12, "stem": "()开始形成以毛泽东同志为核心的党的第一代中央领导集体。", "options": {"A": "遵义会议", "B": "第一次政治协商会议", "C": "中共七大", "D": "新中国成立"}, "answer": "A", "analysis": "在党的历史上，遵义会议是一次具有伟大转折意义的重要会议。这次会议在红军第五次反“围剿”失败和长征初期严重受挫的历史关头召开事实上确立了毛泽东同志在党中央和红军的领导地位，开始确立以毛泽东同志为主要代表的马克思主义正确路线在党中央的领导地位，开始形成以毛泽东同志为核心的党的第"}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 13, "stem": "毛泽东思想的精髓是:()", "options": {"A": "实事求是", "B": "群众路线", "C": "独立自主", "D": "艰苦奋斗"}, "answer": "A", "analysis": "实事求是是毛泽东思想的基本点，是毛泽东思想的精髓。"}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 14, "stem": "中国共产党的根本工作路线是:()", "options": {"A": "实事求是", "B": "群众路线", "C": "独立自主", "D": "自力更生"}, "answer": "B", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 15, "stem": "( )，创造性地将支部建在连上，成立各级士兵委员会，实行民主制度，在政治上官兵平等。", "options": {"A": "南昌起义", "B": "秋收起义", "C": "三湾改编", "D": "古田会议"}, "answer": "C", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 16, "stem": "\"人民，只有人民，才是创造世界历史的动力。这句话表达毛泽东思想活的灵魂是()", "options": {"A": "统一战线", "B": "实事求是", "C": "群众路线", "D": "独立自主"}, "answer": "C", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 17, "stem": "毛泽东在《反对本本主义》一文中就指出:“中国革命斗争的胜利要靠中国同志了解中国情况。”这句活的意思是()", "options": {"A": "加强学习马克思主义理论", "B": "保持与共产国际的联系", "C": "坚持独立自主原则", "D": "必须走群众路线"}, "answer": "C", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 18, "stem": "黄炎培说:我生六十多年，耳闻的不说，所亲眼看到的，真所谓“其兴也淳焉”\"其亡也忽焉”，一人一家，一团体，一地方，乃至一国，不少单位都没有能跳出这周期率的支配力。毛泽东说:我们已经找至新路，我们能跳出这周期率。这条新路，就是()", "options": {"A": "革命", "B": "民主", "C": "统一战线", "D": "党的领导"}, "answer": "B", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 19, "stem": "已经包含了毛泽东思想的活的灵魂的实事求是、群众路线、独立自主三个方面的基本因子的著作是: ( )", "options": {"A": "《星星之火，可以燎原》", "B": "《反对本本主义》", "C": "《矛盾论》、《实践论》", "D": "《新民主主义论》"}, "answer": "B", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "single", "num": 20, "stem": "以下著作的主要内容与毛泽东思想对应错误的是（）", "options": {"A": "《中国革命和中国共产党》——新民主主义革命理论", "B": "《星星之火可以燎原》——党的建设理论", "C": "《论十大关系》——社会主义建设理论", "D": "《反对本本主义》——反对教条主义"}, "answer": "B", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "multi", "num": 1, "stem": "毛泽东思想的科学内涵是:()", "options": {"A": "马克思列宁主义在中国的运用和发展", "B": "中国共产党集体智慧的结晶", "C": "被实践证明了的关于中国革命和建设的正确的理论原则和经验总结", "D": "毛泽东的思想"}, "answer": "ABC", "analysis": "详见教材第17 页：大革命时期，“这些关于新民主主义革命基本思想的提出，标志着毛泽东思想开始萌芽。“这一时期，毛泽东的主要著作是《中国社会各阶级的分析》、《湖南农民运动考察报告》。"}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "multi", "num": 3, "stem": "标志着毛泽东思想初步形成的重要文章主要有（）", "options": {"A": "《中国的红色政权为什么能够存在》", "B": "《井冈山的斗争》", "C": "《星星之火可以燎原》", "D": "《反对本本主义》"}, "answer": "ABCD", "analysis": "注意是“毛泽东思想初步形成“时期，其著作主要有《中国的红色政权为什么能够存在？》、《井冈山的斗争》、《星星之火可以燎原》、《反对本本主义》。"}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "multi", "num": 4, "stem": "体现毛泽东思想得到多方面展开而趋于成熟的著作主要有()", "options": {"A": "《新民主主义论》", "B": "《矛盾论》、《实践论》", "C": "《中国革命和中国共产党》、《论联合政府》", "D": "《<共产党人>发刊词》"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "multi", "num": 5, "stem": "毛泽东思想继续得到发展是在:()", "options": {"A": "国民革命时期", "B": "土地革命时期", "C": "解放战争时期", "D": "中华人民共和国建立后"}, "answer": "CD", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "multi", "num": 6, "stem": "毛泽东思想成熟的突出表现是:()", "options": {"A": "科学阐述了新民主主义革命的对象、动力、领导力量、性质和前途等基本问题", "B": "提出了新民主主义革命的总路线", "C": "制定了相应的经济、政治、文化纲领", "D": "指明了新民主主义革命的具体目标"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "multi", "num": 7, "stem": "下列各项中，体现毛泽东思想在解放战争时期和新中国成立以后继续得到发展的有:()", "options": {"A": "提出了人民民主专政理论", "B": "提出了社会主义改造理论", "C": "提出了两类矛盾的学说特别是正确处理人民内部矛盾的理论", "D": "提出了把马列主义的基本原理同中国革命和建设的具体实际“第二次结合"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "multi", "num": 8, "stem": "毛泽东思想有多方面的丰富内容，除了关于新民主主义革命理论外，还包括:()", "options": {"A": "社会主义革命和社会主义建设的理论", "B": "革命军队建设和军事战略的理论", "C": "思想政治工作和文化工作的理论", "D": "政策和策略以及党的建设的理论"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "multi", "num": 9, "stem": "毛泽东认为，中国资产阶级包括: ()", "options": {"A": "大资产阶级(或买办资产阶级)", "B": "城市小资产阶级", "C": "民族资产阶级", "D": "知识分子"}, "answer": "AC", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "multi", "num": 10, "stem": "在《<共产党人>发刊词》《中国革命和中国共产党》《新民主主义论》《论联合政府》等理论著作中，科学阐述了新民主主义革命的（）等基本问题。", "options": {"A": "对象", "B": "动力", "C": "领导力量", "D": "性质和前途"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "multi", "num": 11, "stem": "毛泽东思想的活的灵魂是:()", "options": {"A": "实事求是", "B": "群众路线", "C": "独立自主", "D": "与时俱进"}, "answer": "ABC", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "multi", "num": 12, "stem": "毛泽东思想的活的灵魂之—实事求是的基本要义是:()", "options": {"A": "理论联系实际", "B": "调查研究", "C": "坚持在实践中检验真理和发展真理", "D": "一切从实际出发"}, "answer": "ACD", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "multi", "num": 13, "stem": "毛泽东思想的历史地位主要表现为:()", "options": {"A": "是马克思主义中国化时代化的第一个重大理论成果", "B": "是中国革命和建设的科学指南", "C": "是中国共产党和中国人民宝贵的精神财富", "D": "是新时期全党全国各族人民团结奋斗的共同思想基础"}, "answer": "ABC", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "multi", "num": 14, "stem": "毛泽东思想在()。", "options": {"A": "国民革命战争时期形成", "B": "土地革命战争时期形成", "C": "抗日战争时期走向成熟", "D": "在解放战争时期和中华人民共和国成立后继续发展"}, "answer": "BCD", "analysis": ""}, {"chapter": "第一章毛泽东思想及其历史地位", "type": "multi", "num": 15, "stem": "中国新民主主义革命之所以要进行武装斗争，是因为（）。", "options": {"A": "外无民族独立，受到帝国主义的侵略", "B": "内无民主制度，收到封建主义和官僚资本主义压迫", "C": "农民阶级的大力支持", "D": "民族资产阶级的支持"}, "answer": "AB", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 1, "stem": "解决中国革命问题的基本前提是（）", "options": {"A": "分清敌人和朋友", "B": "认清中国国情", "C": "坚持无产阶级领导权", "D": "建立工农联盟"}, "answer": "B", "analysis": "认清中国国情，是解决中国革命问题的基本前提。分清敌友，是革命的首要问题。所以应选B。"}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 2, "stem": "近代中国最基本的国情是（）", "options": {"A": "殖民地半殖民地社会", "B": "自给自足的自然经济解体", "C": "半殖民地半封建社会", "D": "资本主义得到一定的发展"}, "answer": "C", "analysis": "鸦片战争后，由于西方列强入侵和封建统治腐败，中国逐步沦为半殖民地半封建社会。自给自足的自然经济解体和资本主义得到一定的发展是半殖民地半封建社会的具体表现。所以应选C。"}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 3, "stem": "近代中国革命以（）为开端，进入新民主主义革命阶段：", "options": {"A": "戊戌变法", "B": "辛亥革命", "C": "五四运动", "D": "中国共产党的成立"}, "answer": "C", "analysis": "以五四运动为标志，中国无产阶级开始作为独立的政治力量登上历史舞台，成为革命的领导力量，马克思列宁主义逐步成为中国革命的指导思想，中国革命进入新民主主义革命阶段。"}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 4, "stem": "中国革命的首要问题是：", "options": {"A": "认清革命的性质", "B": "认清革命发展前途", "C": "认清革命的敌人和朋友", "D": "认清革命的发展阶段"}, "answer": "C", "analysis": "认清中国国情，是解决中国革命问题的基本前提。分清敌友，是革命的首要问题。所以应选C。"}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 5, "stem": "中国革命的首要对象是：", "options": {"A": "资产阶级", "B": "官僚资本主义", "C": "帝国主义", "D": "封建主义"}, "answer": "C", "analysis": "近代中国社会的性质和主要矛盾，决定了中国革命的主要敌人就是帝国主义、封建主义和官僚资本主义。其中，帝国主义是中国革命的首要对象。近代中国所遭受的最大的压迫是来自帝国主义的民族压迫。帝国主义发动的一系列侵略战争，使近代中国由独立的封建社会变成半殖民地半封建的社会，是中国社会进步和发展的最大障碍，是近代中国贫困落后和一切灾难祸害的总根源。推翻帝国主义的压迫是中国走向独立和富强的前提。"}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 6, "stem": "新民主主义革命最基本的动力是：", "options": {"A": "无产阶级", "B": "农民阶级", "C": "贫农", "D": "工人和农民"}, "answer": "A", "analysis": "新民主主义革命的动力包括无产阶级、农民阶级、城市小资产阶级和民族资产阶级。其中，无产阶级是中国革命最基本的动力。农民是中国革命的主力军。"}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 7, "stem": "新民主主义革命的主力军是：", "options": {"A": "工人阶级", "B": "农民阶级", "C": "民族资产阶级", "D": "小资产阶级"}, "answer": "B", "analysis": "新民主主义革命的动力包括无产阶级、农民阶级、城市小资产阶级和民族资产阶级。其中，无产阶级是中国革命最基本的动力。农民是中国革命的主力军。城市小资产阶级是无产阶级的可靠同盟者。民族资产阶级也是中国革命的动力之一。"}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 8, "stem": "新民主主义革命的中心问题是：", "options": {"A": "无产阶级的领导权", "B": "农民阶级的主力军地位", "C": "民族资产阶级的领导权", "D": "无产阶级同资产阶级的联盟"}, "answer": "A", "analysis": "认清中国国情，是解决中国革命问题的基本前提。分清敌友，是革命的首要问题。无产阶级的领导权问题是中国革命的中心问题，也是新民主主义革命理论的核心问题。"}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 9, "stem": "区别新民主主义革命与旧民主主义革命的根本标志是：", "options": {"A": "革命指导思想不同", "B": "革命领导权不同", "C": "革命前途不同", "D": "革命对象不同"}, "answer": "B", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 10, "stem": "新民主主义革命的性质是：", "options": {"A": "无产阶级革命", "B": "农民阶级革命", "C": "新式的特殊的资产阶级民主主义革命", "D": "旧式资产阶级民主主义革命"}, "answer": "C", "analysis": "近代中国半殖民地半封建社会的性质和中国革命的历史任务，决定了新民主主义革命的性质不是无产阶级社会主义革命，而是资产阶级民主主义革命。正如毛泽东所说：“现时中国的资产阶级民主主义革命，已不是旧式的一般的资产阶级民主主义的革命，这种革命已经过时了，而是新式的特殊的资产阶级民主主义的革命。”"}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 11, "stem": "新民主主义的政体是：", "options": {"A": "各革命阶级的联合专政", "B": "多党合作的政治协商制度", "C": "民主集中制的人民代表大会制度", "D": "无产阶级专政"}, "answer": "C", "analysis": "新民主主义国家的国体是无产阶级领导的以工农联盟为基础，包括小资产阶级、民族资产阶级和其他反帝反封建的人们在内的各革命阶级的联合专政。即：国体——各革命阶级联合专政。新民主主义国家的政体，是民主集中制的人民代表大会制度。"}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 12, "stem": "包含着新民主主义革命和社会主义革命双重性质的经济政策是：", "options": {"A": "没收封建地主阶级的土地", "B": "保护民族工商业", "C": "没收官僚垄断资本", "D": "没收民族资本"}, "answer": "C", "analysis": "没收官僚资本，包含着新民主主义革命和社会主义革命的双重性质。通过没收官僚资本建立起来的具有社会主义性质的国营经济，在新民主主义社会的多种经济成分中居于领导地位，为建立新民主主义的国家政权，实现向社会主义过渡奠定了坚实的基础。"}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 13, "stem": "新民主主义经济纲领中极具特色的一项内容是：", "options": {"A": "没收封建地主阶级的土地归农民所有", "B": "保护民族工商业", "C": "没收官僚垄断资本归新民主主义国家所有", "D": "没收民族资本归新民主主义国家所有"}, "answer": "B", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 14, "stem": "新民主主义文化的特征是无产阶级领导的（）文化：", "options": {"A": "民族的科学的大众的", "B": "新民主主义", "C": "社会主义", "D": "共产主义"}, "answer": "A", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 15, "stem": "秋收起义失败后，毛泽东创建的（）革命根据地，把武装斗争的主攻方向首先指向农村：", "options": {"A": "井冈山", "B": "中央", "C": "湘鄂西", "D": "百色"}, "answer": "A", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 16, "stem": "党成立初期，首先把工作重心放在（）", "options": {"A": "郊区", "B": "国外", "C": "农村", "D": "城市"}, "answer": "D", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 17, "stem": "毛泽东系统阐述中国革命三大法宝的文章是：", "options": {"A": "《井冈山的斗争》", "B": "《<共产党人>发刊词》", "C": "《星星之火，可以燎原》", "D": "《战争和战略问题》"}, "answer": "B", "analysis": "毛泽东在《<共产党人>发刊词》一文中，总结了中国革命两次胜利和两次失败的经验教训，揭示了中国革命发展的客观规律，提出了统一战线、武装斗争、党的建设是党在中国革命中战胜敌人的三个主要的法宝。毛泽东指出：“正确地理解了这三个问题及其相互关系，就等于正确地领导了全部中国革命。”"}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 18, "stem": "中国革命建立最广泛的统一战线不仅是必要的，而且是可能的，这种可能是由：", "options": {"A": "中国半殖民地半封建社会的阶级状况决定的", "B": "半殖民地半封建的中国社会交织在一起的诸多矛盾决定的", "C": "中国革命的长期性、残酷性及其发展的不平衡性所决定的", "D": "战争与革命的时代主题决定的"}, "answer": "B", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 19, "stem": "在同资产阶级的联盟中必须实行的方针是：", "options": {"A": "既联合又斗争", "B": "一切经过统一战线", "C": "一切服从统一战线", "D": "团结一批评一团结"}, "answer": "A", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 20, "stem": "无产阶级及其政党在统一战线中必须坚持的原则是：", "options": {"A": "一切经过统一战线", "B": "一切服从统一战线", "C": "坚决斗争", "D": "独立自主"}, "answer": "D", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 21, "stem": "中国新民主主义革命时期的统一战线包含着两个联盟。其中基本的、主要的联盟是：", "options": {"A": "工人阶级同城市小资产阶级的联盟", "B": "工人阶级同农民、小资产阶级等其他劳动人民的联盟", "C": "工人阶级同农民、小资产阶级和民族资产阶级的联盟", "D": "工人阶级同可以合作的非劳动人民的联盟"}, "answer": "B", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 22, "stem": "近代中国的社会性质和主要矛盾决定中国革命仍是（）", "options": {"A": "资产阶级民主革命", "B": "旧民主主义革命", "C": "农民起义", "D": "社会主义革命"}, "answer": "A", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 23, "stem": "中国革命分两步走，第一步的任务是（）", "options": {"A": "推翻帝国主义", "B": "推翻封建主义", "C": "社会主义革命", "D": "新民主主义革命"}, "answer": "D", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 24, "stem": "毛泽东阐述新民主主义的政治、经济、文化的著作是（）", "options": {"A": "《论联合政府》", "B": "《在晋绥干部会议上的讲话》", "C": "《中国社会各阶级分析》", "D": "《新民主主义论》"}, "answer": "D", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "single", "num": 25, "stem": "中国革命走农村包围城市、武装夺取政权的道路，根本在于处理好（）", "options": {"A": "统一战线、武装斗争、党的建设三者之间的关系", "B": "土地革命、武装斗争、农村革命根据地建设三者之间的关系", "C": "工人阶级、农民阶级、民族资产阶级三者之间的关系", "D": "进步势力、中间势力、顽固势力三者之间的关系"}, "answer": "B", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 1, "stem": "近代中国社会的主要矛盾是：", "options": {"A": "帝国主义和中华民族的矛盾", "B": "地主阶级和农民阶级的矛盾", "C": "封建主义和人民大众的矛盾", "D": "帝国主义和中华民族的矛盾是各种矛盾中最主要的矛盾"}, "answer": "ACD", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 2, "stem": "毛泽东指出，新民主主义革命对象包括：", "options": {"A": "资产阶级", "B": "官僚资本主义", "C": "帝国主义", "D": "封建主义"}, "answer": "BCD", "analysis": "近代中国社会的性质和主要矛盾，决定了中国革命的主要敌人就是帝国主义、封建主义和官僚资本主义。所以BCD 应选。资产阶级中，民族资产阶级是中国革命的动力之一，城市小资产阶级是无产阶级的可靠同盟者。"}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 3, "stem": "新民主主义革命的动力包括：", "options": {"A": "工人阶级", "B": "农民阶级", "C": "城市小资产阶级", "D": "民族资产阶级"}, "answer": "ABCD", "analysis": "新民主主义革命的动力包括无产阶级、农民阶级、城市小资产阶级和民族资产阶级。其中，无产阶级是中国革命最基本的动力。农民是中国革命的主力军。城市小资产阶级是无产阶级的可靠同盟者。民族资产阶级也是中国革命的动力之一。"}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 4, "stem": "近代中国无产阶级具有的自身特点和优点包括：", "options": {"A": "深受帝国主义、封建主义和资本主义的三重压迫，革命坚决彻底", "B": "与农民有着天然的联系，便于结成工农联盟", "C": "人数虽少，但很集中，便于组织", "D": "没有任何生产资料"}, "answer": "ABC", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 5, "stem": "新民主主义革命时期无产阶级实现领导权的历史经验是：", "options": {"A": "必须建立以工农联盟为基础的广泛的统一战线", "B": "无产阶级在同资产阶级建立统一战线时，必须坚持独立自主的原则", "C": "必须建立和发展人民的革命武装力量", "D": "加强无产阶级政党的建设"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 6, "stem": "新民主主义革命就是“新式的特殊的资产阶级民主主义革命”，它的基本特点是：", "options": {"A": "它有新的领导阶级即无产阶级", "B": "它有新的指导思想即马克恩主义", "C": "它属于世界无产阶级革命性质", "D": "它有了新的前途，经过新民主主义革命进而达到社会主义的目标"}, "answer": "ABD", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 7, "stem": "民主主义革命和社会主义革命的关系是：", "options": {"A": "两个革命可以“毕其功于一役”", "B": "新民主主义革命是社会主义革命的必要准备", "C": "两个革命之间需要有一个资本主义的过渡阶段", "D": "社会主义革命是新民主主义革命的必然趋势"}, "answer": "BD", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 8, "stem": "新民主主义政治纲领规定的新民主主义国家：", "options": {"A": "国体是各革命阶级的联合专政", "B": "政体是民主集中制的人民代表大会制度", "C": "各革命阶级的联合专政就是工农民主专政", "D": "人民当家作主是国家制度的核心内容和基本准则"}, "answer": "ABD", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 9, "stem": "新民主主义经济纲领的主要内容是：", "options": {"A": "没收封建地主阶级的土地归农民所有", "B": "没收外国在华资本归新民主主义的国家所有", "C": "没收官僚资产阶级的垄断资本归新民主主义的国家所有", "D": "保护民族工商业"}, "answer": "ACD", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 10, "stem": "新民主主义的文化，是民族的科学的大众的文化。其中“民族的”是指：", "options": {"A": "反对外来的资本主义文化", "B": "反对帝国主义压迫，主张中华民族的尊严和独立", "C": "在形式和内容上有中国作风和中国气派", "D": "为全民族90%以上的工农大众服务"}, "answer": "BC", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 11, "stem": "1938 年11 月，毛泽东在《战争和战略问题》中明确指出：“共产党的任务，基本地不是经过长期合法斗争以进入起义和战争，也不是先占城市后取乡村，而是走相反的道路。”其依据是：", "options": {"A": "无产阶级是革命的领导阶级", "B": "农民占人口绝大多数，是民主革命的主力军", "C": "敌人长期占据着中心城市，农村是其统治的薄弱环节", "D": "中国内无民主制度，外无民族独立"}, "answer": "BCD", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 12, "stem": "中国共产党领导的武装斗争，实质上是在无产阶级领导下的农民战争，这是因为：", "options": {"A": "农民阶级是中国最为集中的、最为革命的先进阶级", "B": "中国革命不同时期人民武装力量的主要成分是农民", "C": "中国革命最广大的动力和革命队伍的主力军是农民", "D": "革命的领导者中国共产党是农民阶级的先锋队组织"}, "answer": "BC", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 13, "stem": "土地革命战争时期，毛泽东指出：“一国之内，在四周白色政权的包围中，有一小块或若干小块红色政权的区域长期地存在，这是世界各国从来没有的事。这种奇事的发生，有其独特的原因。”这些原因是：", "options": {"A": "中国是多个帝国主义国家间接统治的经济政治发展极端不平衡的半殖民地半封建大国", "B": "国民革命的政治影响及良好的群众基础", "C": "全国革命形势的继续发展和相当力量的正式红军的存在", "D": "党的领导的有力量及其政策的不错误"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 14, "stem": "民主主义革命和社会主义革命的关系是：", "options": {"A": "两个革命可以“毕其功于一役”", "B": "新民主主义革命是社会主义革命的必要准备", "C": "两个革命之间需要有一个资本主义的过渡阶段", "D": "社会主义革命是新民主主义革命的必然趋势"}, "answer": "BD", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 15, "stem": "中国革命走农村包围城市、武装夺取政权的道路，必须处理好（）三者之间的关系，在中国共产党的领导下，实现三者的密切结合和有机统一：", "options": {"A": "土地革命", "B": "党的建设", "C": "武装斗争", "D": "农村根据地建设"}, "answer": "ACD", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 16, "stem": "中国共产党在中国革命中战胜敌人的三个法宝是：", "options": {"A": "统一战线", "B": "武装斗争", "C": "党的建设", "D": "土地革命"}, "answer": "ABC", "analysis": "毛泽东在《<共产党人>发刊词》一文中，总结了中国革命两次胜利和两次失败的经验教训，揭示了中国革命发展的客观规律，提出了统一战线、武装斗争、党的建设是党在中国革命中战胜敌人的三个主要的法宝。毛泽东指出：“正确地理解了这三个问题及其相互关系，就等于正确地领导了全部中国革命。”"}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 17, "stem": "近代中国社会的阶级结构是“两头小中间大”，“两头”是指：", "options": {"A": "无产阶级", "B": "农民阶级", "C": "地主大资产阶级", "D": "城市小资产阶级"}, "answer": "AC", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 18, "stem": "近代中国社会的阶级结构是“两头小中间大”，“中间”是指：", "options": {"A": "无产阶级", "B": "农民阶级", "C": "民族资产阶级", "D": "城市小资产阶级"}, "answer": "BCD", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 19, "stem": "中国革命统一战线中的两个联盟是：", "options": {"A": "工人阶级和农民阶级的联盟", "B": "工人阶级同农民、小资产阶级等其他劳动者之间的联盟", "C": "工人阶级和小资产阶级的联盟", "D": "工人阶级同可以合作的非劳动者之间的联盟"}, "answer": "BD", "analysis": ""}, {"chapter": "第二章新民主主义革命理论", "type": "multi", "num": 20, "stem": "总结新民主主义革命时期党建立、巩固和发展统一战线的实践经验，主要是（）", "options": {"A": "要建立巩固的工农联盟", "B": "要正确对待资产阶级，尤其是民族资产阶级", "C": "一切经过统一战线,一切服从统一战线", "D": "采取区别对待的方针"}, "answer": "ABD", "analysis": "抗日战争时期王明在统一战线问题上所犯的错误是,主张“一切经过统一战线,一切服从统一战线”，将抗日战争的领导权送给国民党，实质上是对国民党的反人民政策的妥协退让。所以C 不选。详见2023 年版教材第61 页。"}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 1, "stem": "从中华人民共和国成立到社会主义改造基本完成，是我国从新民主主义社会到社会主义的过渡时期，这一时期，我国社会的性质是（）", "options": {"A": "资本主义社会", "B": "社会主义社会", "C": "民主主义社会", "D": "新民主主义社会"}, "answer": "D", "analysis": "从中华人民共和国成立到社会主义改造基本完成，是我国从新民主主义社到社会主义的过渡时期，这一时期，我国社会的性质是新民主主义社会。"}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 2, "stem": "1952 年底，随着土地改革的基本完成，我国社会的主要矛盾已转变成（）", "options": {"A": "人民大众同帝国主义、封建主义及其走狗国民党反动派残余的矛盾", "B": "帝国主义和中华民族的矛盾、封建主义和人民大众的矛盾", "C": "工人阶级同资产阶级的矛盾、社会主义道路同资本主义道路的矛盾", "D": "人民日益增长的物质文化需要同落后的社会生产之间的矛盾"}, "answer": "C", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 3, "stem": "新民主主义社会中，处于领导地位的经济成分是（）", "options": {"A": "个体经济", "B": "私人和国家资本主义经济", "C": "国营经济", "D": "合作社经济"}, "answer": "C", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 4, "stem": "建国初期，我国社会主义国营经济建立的最主要途径和手段是（）", "options": {"A": "没收帝国主义在华企业", "B": "没收官僚资本", "C": "没收民族资本", "D": "没收地主阶级的土地和财产"}, "answer": "B", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 5, "stem": "从中华人民共和国成立到社会主义改造基本完成，是我国从新民主主义到社会主义的过渡时期，这一时期，个体经济向社会主义集体经济过渡的形式是（）", "options": {"A": "国营经济", "B": "私人资本主义经济", "C": "国家资本主义经济", "D": "合作社经济"}, "answer": "D", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 6, "stem": "毛泽东关于农业社会主义改造理论来源是（）", "options": {"A": "马克思的合作化理论", "B": "恩格斯的合作化理论", "C": "列宁的合作化理论", "D": "斯大林的合作化理论"}, "answer": "C", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 7, "stem": "标志着资本主义工商业的社会主义改造已经基本完成是实现了（）", "options": {"A": "手工业合作社的建立", "B": "农业合作化", "C": "全行业公私合营", "D": "生产责任制"}, "answer": "C", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 8, "stem": "过渡时期总路线的主体是（）", "options": {"A": "国家的社会主义工业化", "B": "私营经济的国有化", "C": "个体农业的集体化", "D": "对个体农业、手工业和资本主义工商业的改造"}, "answer": "A", "analysis": "党在过渡时期总路线的主要内容被概括为“一化三改”。“一化”即社会主义工业化。"}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 9, "stem": "关于社会主义过渡时期总路线错误的说法是（）", "options": {"A": "实现社会主义工业化，农业、手工业和资本主义工商业的社会主义改造", "B": "过渡时期结束的标志是社会主义改造结束", "C": "以单一的社会主义公有制和计划经济体制为目标", "D": "以中国特色社会主义为目标"}, "answer": "D", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 10, "stem": "党在过渡时期总路线的实质是（）", "options": {"A": "改变生产资料的私有制", "B": "发展生产力", "C": "消灭剥削阶级", "D": "改造个体农民和手工业者"}, "answer": "A", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 11, "stem": "中国社会主义改造和社会主义建设道路中一个十分突出的特殊问题是（）", "options": {"A": "一个落后的农业国的工业化问题", "B": "农业的社会主义改造问题", "C": "农业的机械化问题", "D": "民族资本主义工商业的社会主义改造问题"}, "answer": "A", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 12, "stem": "制定我国第一个五年计划的依据是（）", "options": {"A": "国民经济的恢复和发展", "B": "土地改革的完成", "C": "实现国家工业化", "D": "过渡时期的总路线"}, "answer": "D", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 13, "stem": "中国共产党对个体农业和手工业实行社会主义改造的方针是（）", "options": {"A": "趁热打铁，积极领导", "B": "自愿互利，国家帮助", "C": "积极领导，稳步前进", "D": "国家帮助，典型示范"}, "answer": "C", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 14, "stem": "我国在手工业的社会主义改造过程中所办的手工业生产合作社属于（）", "options": {"A": "社会主义性质", "B": "半社会主义性质", "C": "社会主义萌芽性质", "D": "非社会主义性质"}, "answer": "A", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 15, "stem": "中国共产党对资本主义工商业进行社会主义改造的主要方式是（）", "options": {"A": ".和平赎买", "B": ".统购统销", "C": ".公私合营", "D": ".合作化"}, "answer": "A", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 16, "stem": "我国对资本主义工商业改造创造了国家资本主义的各种形式，其高级形式是（）", "options": {"A": "统购包销", "B": "委托加工，计划订货", "C": "经销、代销", "D": "公私合营"}, "answer": "D", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 17, "stem": "我国在对资产阶级工商业实行社会主义改造的过程中，国家向私营企业投资入股，企业生产资料由国家和资本家共同所有，利润分配仍然实行“四马分肥”，国家向企业派出公方代表，与工人、资本家共同管理和改造企业，公方代表居领导地位。这时的企业性质（）", "options": {"A": "仍然属于私营企业", "B": "属于半社会主义性质", "C": "具有了社会主义因素", "D": "基本上属于社会主义国营性质"}, "answer": "B", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 18, "stem": "在我国的过渡性质时期，民族资产阶级与工人阶级的矛盾性质是（）", "options": {"A": "对抗性的", "B": "非对抗性的", "C": "既有对抗性一面又有非对抗性的一面", "D": "没有矛盾"}, "answer": "C", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 19, "stem": "我国进入社会主义初级阶段的起点及剥削阶级和剥削制度被消灭的标志是（）", "options": {"A": ".社会主义改造的完成", "B": ".国民经济恢复任务的完成", "C": ".中华人民共和国的成立", "D": ".中共十三大的召开"}, "answer": "A", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "single", "num": 20, "stem": "1956 年，社会主义改造基本完成以后，我国社会的主要矛盾是（）", "options": {"A": "工人阶级和资产阶级的矛盾", "B": "社会主义道路和资本主义道路之间的矛盾", "C": "人民日益增长的物质文化生活需要同落后的社会生产之间的矛盾", "D": "坚持思想基本原则和资产阶级自由化之间的矛盾"}, "answer": "C", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "multi", "num": 1, "stem": "关于中国新民主主义社会，下列说法正确的是（）", "options": {"A": "就全国范围来讲，它是指从1949 年中华人民共和国的成立到1956 年社会主义改造的基本完成", "B": "它是一个过渡性质的社会，类似于马克思列宁所说的过渡时期", "C": "它从属于社会主义范畴", "D": "它与社会主义初级阶段本质上是相同的"}, "answer": "ABC", "analysis": "从中华人民共和国成立到社会主义改造基本完成，是我国从新民主主义到社会主义的过渡时期。这一时期，我国社会的性质是新民主主义社会。新民主主义社会不是一个独立的社会形态，而是由新民主主义向社会主义转变的过渡性社会形态。"}, {"chapter": "第三章社会主义改造理论", "type": "multi", "num": 2, "stem": "从中华人民共和国成立到社会主义改造基本完成，是我国从新民主主义到社会主义的过渡时期。这一时期中国社会的阶级构成主要包括（）", "options": {"A": "工人阶级", "B": "农民阶级", "C": "民族资产阶级", "D": "城市小资产阶级"}, "answer": "ABCD", "analysis": "与新民主主义时期三种不同性质的主要经济成分相联系，中国社会的阶级构成主要是工人阶级、农民阶级和其他小资产阶级、民族资产阶级等基本的阶级力量。"}, {"chapter": "第三章社会主义改造理论", "type": "multi", "num": 3, "stem": "在新民主主义社会中，主要的经济成分有哪几种（）", "options": {"A": "合作社经济", "B": "个体经济", "C": "社会主义经济", "D": "资本主义经济"}, "answer": "BCD", "analysis": "在新民主主义社会中,存在着五种经济成分，即社会主义性质的国营经济、半社会主义性质的合作社经济、农民和手工业者的个体经济、私人资本主义经济和国家资本主义经济。其中半社会主义性质的合作社经济是个体经济向社会主义集体经济过渡的形式，国家资本主义经济是私人资本主义经济向社会主义国营经济过渡的形式。所以，主要的经济成分是三种：社会主义经济、个体经济和资本主义经济。"}, {"chapter": "第三章社会主义改造理论", "type": "multi", "num": 4, "stem": "1952 年党中央在酝酿过渡时期总路线时，毛泽东把实现向社会主义转变的设想，由建国之初的“先搞工业化建设”再一举过渡，改变为“建设和改造同时并举，逐步过渡”，这一改变原因和条件是：（）", "options": {"A": "我国社会主义经济因素的不断增长和对资本主义经济的限制", "B": "为了确定我国工业化建设的社会主义方向", "C": "我国工业化建设取得了重大成就", "D": "民主革命的遗留任务已经完成"}, "answer": "ABD", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "multi", "num": 5, "stem": "新中国对个体手工业社会主义改造的主要形式有（）", "options": {"A": "供销组", "B": "供销合作社", "C": "生产合作社", "D": "公私合营"}, "answer": "ABC", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "multi", "num": 6, "stem": "中国共产党根据马克思列宁主义关于农业社会主义改造的思想，从我国的实际出发，开创了一条有中国特点的农业合作化道路，成功实现了对个体农业的社会主义改造，其成功经验主要有（）", "options": {"A": "在土地改革基础上，不失时机地引导个体农民走互助合作道路", "B": "遵循自愿互利、典型示范、国家帮助的原则", "C": "实行“三级所有、队为基础”的农村集体经济体制", "D": "采取从互助组到初级合作社到高级合作社的逐步过渡形式"}, "answer": "ABD", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "multi", "num": 7, "stem": "上世纪50 年代，我国在对资本主义工商业进行社会主义改造过程中创造的国家资本主义的具体形式有（）", "options": {"A": "加工订货", "B": "统购包销", "C": "经销代销", "D": "公私合营"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "multi", "num": 8, "stem": "我国对资本主义工商业进行社会主义改造的经验有（）", "options": {"A": "严格区别官僚资本和民族资本的界限，实行了和平赎买，和平地实现了和平关系的深刻变革", "B": "创造了国家资本主义的多种形式，采取了由低级到高级逐步过渡的形势", "C": "把对企业的改造和对资本家的改造结合起来，把资本家改造成自食其力的劳动者", "D": "对私人资本主义的赎买政策应始终坚持“四马分肥”"}, "answer": "ABC", "analysis": ""}, {"chapter": "第三章社会主义改造理论", "type": "multi", "num": 10, "stem": "我国社会主义改造是一场伟大的社会变革，但是在改造过程中也出现了一些偏差，遗留了一些问题，具体表现在（）", "options": {"A": "所有制结构过于单一，在社会主义公有制已居于绝对统治地位的条件下，没有限度地保留一部分有益于国计民生的个体经济和私营经济", "B": "高度集中的计划经济体制也随之扩大到整个社会经济生活", "C": "在一定程度上排斥了商品经济和市场经济的正常运行", "D": "要求过急，发展过快，工作过粗，改造形式过于简单"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 1, "stem": "毛泽东明确提出以苏为鉴，独立自主地探索适合中国情况的社会主义建设道路的著作是：", "options": {"A": "《论十大关系》", "B": "《新民主主义论》", "C": "《关于正确处理人民内部矛盾的问题》", "D": "《中国革命和中国共产党》"}, "answer": "A", "analysis": "简要解析：1956 年，毛泽东先后在中央政治局扩大会议和最高国务会议上，作了《论十大关系》的报告，初步总结了我国社会主义建设的经验，明确提出要以苏为鉴，独立自主地探索适合中国情况的社会主义建设道路。《论十大关系》标志着党探索中国社会主义道路的良好开端。"}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 3, "stem": "《论十大关系》的报告围绕的基本方针是：", "options": {"A": "独立自主", "B": "自力更生为主，争取外援为辅", "C": "调动一切积极因素，为社会主义事业服务", "D": "走中国特色社会主义道路"}, "answer": "C", "analysis": "《论十大关系》确定了一个基本方针，就是“努力把党内党外、国内国外的一切积极的因素，直接的、间接的积极因素，全部调动起来”，为社会主义建设服务。"}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 4, "stem": "《论十大关系》的前五条主要讨论经济问题，其中前三条讲重工业和轻工业、农业的关系，沿海工业和内地工业的关系，经济建设和国防建设的关系。这实际上明确提出了：", "options": {"A": "中国的工业化道路问题", "B": "中国的经济建设问题", "C": "中国的工业发展问题", "D": "工业发展的平衡问题"}, "answer": "A", "analysis": "“十大关系”前五条主要讨论经济问题，着眼于调动经济领域各个方面的积极因素。其中前三条讲重工业和轻工业、农业的关系，沿海工业和内地工业的关系，经济建设和国防建设的关系。这实际上是在论述如何开辟一条和苏联有所不同的中国工业化道路问题。"}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 6, "stem": "党的八大正确分析了社会主义改造完成后我国社会主要矛盾的变化，提出今后党和国家的工作重点是：", "options": {"A": "调动一切积极因素，为社会主义事业服务", "B": "正确处理人民内部矛盾，巩固社会主义制度", "C": "集中力量发展生产力，建设社会主义现代化强国", "D": "技术革命和社会主义建设"}, "answer": "D", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 7, "stem": "毛泽东系统论述社会主义社会矛盾理论的著作是：", "options": {"A": "《关于正确处理人民内部矛盾的问题》", "B": "《新民主主义论》", "C": "《论十大关系》", "D": "《中国社会各阶级的分析》"}, "answer": "A", "analysis": "党在八大前后，特别是毛泽东在1957 年2 月所作的《关于正确处理人民内部矛盾的问题》的报告，系统论述了社会主义社会矛盾的理论。"}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 8, "stem": "毛泽东在《关于正确处理人民内部矛盾的问题》的报告中指出，社会主义社会的基本矛盾是：", "options": {"A": "人民内部的非对抗性的矛盾", "B": "生产关系和生产力之间、上层建筑和经济基础之间的矛盾", "C": "无产阶级和资产阶级之间、社会主义和资本主义之间的矛盾", "D": "人民日益增长的物质文化需要同落后的社会生产之间的矛盾"}, "answer": "B", "analysis": "关于社会主义社会的基本矛盾。毛泽东指出：“在社会主义社会中，基本的矛盾仍然是生产关系和生产力之间的矛盾，上层建筑和经济基础之间的矛盾。"}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 9, "stem": "毛泽东认为社会主义社会基本矛盾的特点是：", "options": {"A": "相适应", "B": "相矛盾", "C": "又相适应又相矛盾", "D": "不相适应又不相矛盾"}, "answer": "C", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 11, "stem": "下列不属于人民内部矛盾的是：", "options": {"A": "工人阶级和农民阶级的矛盾", "B": "工人、农民同知识分子之间的矛盾", "C": "敌对分子、敌对势力与人民的矛盾", "D": "民主同集中的矛盾"}, "answer": "C", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 12, "stem": "人民内部矛盾是：", "options": {"A": "分清是非的问题", "B": "分清你我的问题", "C": "分清敌我的问题", "D": "分清对错的问题"}, "answer": "A", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 13, "stem": "解决敌我矛盾应采用：", "options": {"A": "说服的方法", "B": "专政的方法", "C": "民主的方法", "D": "教育的方法"}, "answer": "B", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 14, "stem": "毛泽东在1957 年2 月所作的《关于正确处理人民内部矛盾的问题》的报告中，系统论述了社会主义社会矛盾的理论。毛泽东强调，社会主义国家政治生活的主题是：", "options": {"A": "正确区分和处理两类不同性质矛盾的问题", "B": "正确处理人民内部矛盾的问题", "C": "正确处理敌我矛盾的问题", "D": "正确认识和处理阶级斗争的问题"}, "answer": "B", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 15, "stem": "关于人民内部矛盾表述正确的是：", "options": {"A": "人民内部矛盾是由于人民根本利益不一致导致的", "B": "领导同被领导之间的矛盾属于人民内部矛盾", "C": "工人阶级和民族资产阶级之间的矛盾不属于人民内部矛盾", "D": "人民内部矛盾是固定不变的，不会随条件的变化而发生转化"}, "answer": "B", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 16, "stem": "在人民民主专政体制下，正确处理两类不同性质社会矛盾的基本方法是：", "options": {"A": "依法严惩和说服教育", "B": "暴力镇压和说服教育", "C": "批评和团结", "D": "专政和民主"}, "answer": "D", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 17, "stem": "解决科学文化领域的矛盾应坚持的方针是：", "options": {"A": "百家争鸣、百花齐放", "B": "团结-批评-团结", "C": "文化交流和艺术实践", "D": "异域文化之间的交流与碰撞"}, "answer": "A", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 18, "stem": "毛泽东明确提出要走一条有别于苏联的中国工业化道路的著述是：", "options": {"A": "《论十大关系》", "B": "《关于正确处理人民内部矛盾的问题》", "C": "《为争取国家财政经济状况基本好转而斗争》", "D": "《在扩大的中央工作会议上的讲话》"}, "answer": "B", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 19, "stem": "促使我党思考和探索如何走中国工业化道路的直接原因是：", "options": {"A": "以苏为鉴，吸取苏联在建设社会主义中的教训", "B": "我国重工业、农业和轻工业发展的比例失调", "C": "我国生产力落后，经济基础薄弱", "D": "受苏联的影响，强调重工业的发展。"}, "answer": "A", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 20, "stem": "走中国工业化道路的关键问题是：", "options": {"A": "正确处理重工业和轻工业、农业的关系", "B": "正确处理人民内部的矛盾", "C": "正确处理两类不同性质的矛盾", "D": "调动一切积极因素为社会主义建设服务"}, "answer": "A", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 21, "stem": "我国走工业化道路的根本原因是：", "options": {"A": "新中国的工业基础十分薄弱", "B": "中国民族工业发展已经具有了深厚的基础", "C": "是中国共产党重视国家工业化的一贯政策", "D": "实现民族独立和国家富强的内在要求和必要条件"}, "answer": "D", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 22, "stem": "实现我国工业化应坚持的方针不包括：", "options": {"A": "“两条腿走路”", "B": "农业为基础，工业为主导，以农轻重为序", "C": "中央工业和地方工业并举", "D": "国家、生产单位和生产者个人利益兼顾"}, "answer": "D", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 23, "stem": "在社会主义建设道路初步探索过程中，关于生产资料所有制调整方面，提出了“三个主体，三个补充”设想的是：", "options": {"A": "毛泽东", "B": "刘少奇", "C": "陈云", "D": "邓小平"}, "answer": "C", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 24, "stem": "我党提出的“三个主体、三个补充”意味着：", "options": {"A": "社会主义国家要消除商品经济", "B": "发展商品生产会导致资本主义", "C": "在我国经济建设发展过程中，也要发挥非公有制经济和市场的作用", "D": "商品经济是资本主义的本质特征"}, "answer": "C", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 25, "stem": "下列理论成果，不属于社会主义建设道路初步探索时期提出的是（）", "options": {"A": "“四个现代化”战略目标", "B": "社会主义初级阶段", "C": "祖国统一和外交工作", "D": "走中国工业化道路"}, "answer": "B", "analysis": "社会主义初级阶段理论是十一届三中全会后形成的邓小平理论的内容之一。"}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "single", "num": 26, "stem": "20 世纪60 年代初，周恩来将我们党提出的一系列和平解决台湾问题的思想、政策和主张归纳为（）", "options": {"A": "“和为贵”", "B": "“爱国一家”", "C": "“爱国不分先后”", "D": "“一纲四目”"}, "answer": "D", "analysis": "简要解析：20 世纪50 年代中期，围绕台湾问题的国内外形势都发生了很大变化。1956年4 月，毛泽东提出“和为贵”“爱国一家”“爱国不分先后”等政策主张。19世纪60 年代初，周恩来将我们党提出的一系列和平解决台湾问题的思想、政策和主张归纳为“一纲四目”。"}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "multi", "num": 1, "stem": "1956 年起，毛泽东开始探索适合中国特点的社会主义建设道路。与此相联系，毛泽东提出了一系列新思想，主要有：", "options": {"A": "强调独立自主地探索适合中国情况的社会主义建设道路", "B": "提出以苏联为鉴", "C": "提出马克思主义同中国实际的“第二次结合”", "D": "强调改革开放"}, "answer": "ABC", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "multi", "num": 2, "stem": "关于社会主义现代化建设的积极因素表述正确的是：", "options": {"A": "积极因素处于主导、统治地位", "B": "是社会主义事业必定胜利的可靠保证", "C": "积极因素与消极因素在一定条件下是可以互相转化的", "D": "积极因素和消极因素是对立统一的关系"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "multi", "num": 3, "stem": "党在社会主义建设道路的初步探索中取得的重要理论成果包括（）", "options": {"A": "调动一切积极因素为社会主义事业服务", "B": "正确认识和处理社会主义社会矛盾", "C": "走中国工业化道路", "D": "走中国特色社会主义道路"}, "answer": "ABC", "analysis": "党在社会主义建设道路初步探索中形成了调动一切积极因素为社会主义事业服务、正确认识和处理社会主义社会矛盾、走中国工业化道路等重要思想。党的十二大开幕词中明确提出“走自己的路，建设有中国特色社会主义”。"}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "multi", "num": 4, "stem": "关于《论十大关系》的表述正确的有：", "options": {"A": "它是新中国成立以来中央领导集体深入调查研究的成果", "B": "它为中共八大的召开作了理论准备", "C": "探讨了中央与地方的关系", "D": "探讨了沿海工业和内地工业的关系"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "multi", "num": 5, "stem": "1957 年2 月，毛泽东作了《关于正确处理人民内部矛盾的问题》的讲话，系统论述了社会主义社会矛盾的理论。毛泽东指出：", "options": {"A": "矛盾是普遍存在的，社会主义社会同样充满矛盾", "B": "社会主义社会的基本矛盾仍然是生产关系和生产力之间、上层建筑和经济基础之间的矛盾，它同旧社会的基本矛盾性质是一样的", "C": "社会主义社会的矛盾反映在政治上可以划分为敌我矛盾和人民内部矛盾这两类性质完全不同的矛盾，正确处理人民内部矛盾的问题是社会主义国家政治生活的主题", "D": "社会主义社会的矛盾可以通过社会主义制度本身的自我调整和自我完善得到解决"}, "answer": "ACD", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "multi", "num": 6, "stem": "社会主义改造的任务完成以后，我国社会的基本矛盾是：", "options": {"A": "敌我矛盾", "B": "人民内部矛盾", "C": "生产力和生产关系的矛盾", "D": "经济基础和上层建筑的矛盾"}, "answer": "CD", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "multi", "num": 7, "stem": "党的八大正确分析了社会主义改造完成后我国社会主要矛盾的变化，指出，社会主义制度在我国已经基本上建立起来了。我们国内的主要矛盾，已经是：", "options": {"A": "人民日益增长的物质文化需要同落后的社会生产之间的矛盾", "B": "人民对于建立先进的工业国的要求同落后的农业国的现实之间的矛盾", "C": "人民对于经济文化迅速发展的需要同当前经济文化不能满足人民需要的状况之间的矛盾", "D": "无产阶级和资产阶级的矛盾"}, "answer": "BC", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "multi", "num": 8, "stem": "关于社会主义两类不同性质的矛盾表述正确的有：", "options": {"A": "反映在政治上可以划分为敌我矛盾和人民内部矛盾", "B": "人民内部矛盾是非对抗性的矛盾，处理不当就转化为对抗性的矛盾", "C": "用专政、说服教育的方法解决敌我矛盾", "D": "人民同反抗社会主义主义革命的社会势力和社会集团的矛盾属于人民内部矛盾"}, "answer": "AB", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "multi", "num": 9, "stem": "毛泽东提出的社会主义现代化建设“两步走”的发展战略是：", "options": {"A": "第一步建成一个独立的比较完整的工业体系和国民经济体系", "B": "第一步使中国逐步由农业国转变为工业国", "C": "第二步全面实现工业、农业、国防和科学技术现代化，使中国走在世界前列", "D": "第二步到本世纪末全面实现现代化，人民生活达到小康水平"}, "answer": "AC", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "multi", "num": 10, "stem": "我党在社会主义建设道路初步探索中提出的重要思想理论观点包括：", "options": {"A": "社会主义发展两阶段理论", "B": "社会主义现代化建设“两步走”发展战略", "C": "资本主义经济是社会主义经济的有益补充", "D": "要建立适合我国情况和人民需要的社会主义的市场"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "multi", "num": 11, "stem": "20 世纪50 年代末60，我党关于经济体制的认识表述正确的包括：", "options": {"A": "发展商品生产，利用价值规律", "B": "社会主义经济应既有计划又有多样性和灵活性", "C": "初步建立社会主义市场经济体制", "D": "建立适合我国情况和人民需要的社会主义的市场"}, "answer": "ABD", "analysis": ""}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "multi", "num": 12, "stem": "毛泽东关于社会主义发展阶段的思想，正确的有（）", "options": {"A": "可能分为两个阶段，第一个阶段是社会主义初级阶段，第二个阶段是社会主义高级阶段", "B": "可能分为两个阶段，第一个阶段是不发达的社会主义，第二个阶段是比较发达的社会主义", "C": "后一阶段可能比前一阶段需要更长的时间", "D": "经过后一阶段，到了物质产品、精神财富都极为丰富和人们的共产主义觉悟极大提高的时候，就可以进入共产主义社会了。"}, "answer": "BCD", "analysis": "在探索中国社会主义建设道路过程中，毛泽东提出：“社会主义这个阶段，又可能分为两个阶段，第一个阶段是不发达的社会主义，第二个阶段是比较发达的社会主义。后一阶段可能比前一阶段需要更长的时间。经过后一阶段，到了物质产品、精神财富都极为丰富和人们的共产主义觉悟极大提高的时候，就可以进入共产主义社会了。”"}, {"chapter": "第四章社会主义建设道路初步探索的理论成果", "type": "multi", "num": 13, "stem": "党领导人民探索社会主义建设道路，历经艰辛和曲折，在理论和实践上取得了一系列重要成果。这些成果具有重要意义：", "options": {"A": "巩固和发展了我国的社会主义制度", "B": "为开创中国特色社会主义提供了宝贵经验、理论准备、物质基础", "C": "丰富了科学社会主义的理论和实践", "D": "为其他国家的社会主义建设提供了经验和借鉴"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "single", "num": 1, "stem": "中国特色社会主义理论体系不包括（）", "options": {"A": "毛泽东思想", "B": "邓小平理论", "C": "“三个代表”重要思想", "D": "习近平新时代中国特色社会主义思想"}, "answer": "A", "analysis": "参见教材第五章，以及导论“马克思主义中国化时代化理论成果及其关系。"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "single", "num": 2, "stem": "“三个代表”重要思想创造性地回答了（）", "options": {"A": "什么是社会主义、怎样建设社会主义", "B": "建设什么样的党、怎样建设党", "C": "实现什么样的发展、怎样发展", "D": "新时代坚持和发展什么样的中国特色社会主义、怎样坚持和发展什么样的中国特色社会主义"}, "answer": "B", "analysis": "以江泽民同志为主要代表的中国共产党人科学判断党的历史方位、深刻总结历史经验……提出了一系列创新性观点，丰富和发展了党的理论路线方针政策，进一步回答了什么是社会主义、怎样建设社会主义的问题，创造性地回答了“建设什么样的党、怎样建设党”这一重大问题。"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "single", "num": 3, "stem": "邓小平理论的集大成之作是（）", "options": {"A": "1982 年党的十二大上邓小平致开幕词", "B": "党的十三大报告", "C": "党的十四大报告", "D": "邓小平南方谈话"}, "answer": "D", "analysis": ""}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "single", "num": 4, "stem": "正式提出“邓小平理论”这一概念是在（）", "options": {"A": "1987 年召开的党的十三大", "B": "1992 年召开的党的十四大", "C": "1997 年召开的党的十五大", "D": "2002 年召开的党的十六大"}, "answer": "C", "analysis": "1997 年召开的党的十五大正式提出，“邓小平理论”这一概念，深刻阐述了邓小平理论的历史地位和指导意义，进一步论述了邓小平对这一理论的创立作出的独创性贡献。"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "single", "num": 5, "stem": "把邓小平理论同马克思列宁主义、毛泽东思想一起，确立为党的指导思想并写入党章是在（）", "options": {"A": "1987 年召开的党的十三大", "B": "1992 年召开的党的十四大", "C": "1997 年召开的党的十五大", "D": "2002 年召开的党的十六大"}, "answer": "C", "analysis": "党的十五大郑重地把邓小平理论同马克思列宁主义、毛泽东思想一起，确立为党的指导思想并写入党章。"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "single", "num": 6, "stem": "正式将邓小平理论载入宪法是在（）", "options": {"A": "1993 年宪法修正案", "B": "1999 年宪法修正案", "C": "1992 年召开的党的十四大", "D": "1997 年召开的党的十五大"}, "answer": "B", "analysis": ""}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "single", "num": 7, "stem": "江泽民首次对“三个代表”进行了比较全面的阐述是在（）", "options": {"A": "2000 年2 月25 日在广东考察工作时", "B": "2000 年5 月14 日在江苏、浙江、上海党建工作座谈会上", "C": "2000 年6 月9 日在全国党校工作会议上", "D": "2000 年6 月28 日在中央思想政治工作会议上"}, "answer": "A", "analysis": "2000 年2 月25 日，江泽民在广东考察工作时，从全面总结党的历史经验和如何适应新形势新任务的要求出发，首次对“三个代表”进行了比较全面的阐述"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "single", "num": 8, "stem": "江泽民全面阐述“三个代表”重要思想的科学内涵和基本内容是在（）", "options": {"A": "2000 年10 月党的十五届五中全会上", "B": "2001 年7 月1 日庆祝中国共产党成立八十周年大会上", "C": "2002 年5 月在中共中央党校省部级干部进修班毕业典礼上", "D": "2002 年11 月党的十六大上"}, "answer": "B", "analysis": "2001 年7 月1 日，江泽民在庆祝中国共产党成立八十周年大会上的讲话中全面阐述了“三个代表” 重要思想的科学内涵和基本内容。"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "single", "num": 9, "stem": "将“三个代表”重要思想确立为党必须长期坚持的指导思想，并写入党章是在（）", "options": {"A": "1997 年党的十五大", "B": "2002 年党的十六大", "C": "2007 年党的十七大", "D": "2012 年党的十八大"}, "answer": "B", "analysis": "2002 年11 月，党的十六大全面阐述了“三个代表”重要思想形成的时代背景、历史地位、精神实质和指导意义，将“三个代表”重要思想同马克思列宁主义、毛泽东思想和邓小平理论一道确立为党必须长期坚持的指导思想，并写入党章，实现了我们党指导思想的又一次与时俱进。"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "single", "num": 10, "stem": "党的文件中第一次提出科学发展观是在（）", "options": {"A": "2003 年7 月胡锦涛在全国防治非典工作会议上的讲话", "B": "2003 年10 月党的十六届三中全会通过的《中共中央关于完善社会主义市场经济体制若干问题的决定》", "C": "2004 年3 月胡锦涛在中央人口资源环境座谈会上发表重要讲话", "D": "2007 年党的十七大报告"}, "answer": "B", "analysis": "2003 年10 月党的十六届三中全会通过的《中共中央关于完善社会主义市场经济体制若干问题的决定》，这是我们党的文件中第一次提出科学发展观。"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "single", "num": 11, "stem": "把科学发展观写入党章是在（）", "options": {"A": "2002 年党的十六大", "B": "2007 年党的十七大", "C": "2012 年党的十八大", "D": "2017 年党的十九大"}, "answer": "B", "analysis": "2007 年，党的十七大对科学发展观的理论定位、理论依据、理论内涵作了全面阐述，把科学发展观写入党章，科学发展观进一步走向成熟。"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "single", "num": 12, "stem": "把习近平新时代中国特色社会主义思想确立为党必须长期坚持的指导思想并庄严地写入党章，实现了党的指导思想的与时俱进是在（）", "options": {"A": "2012 年党的十八大", "B": "2017 年党的十九大", "C": "2021 年党的十九届六中全会", "D": "2022 年党的二十大"}, "answer": "B", "analysis": "2017 年，党的十九大把习近平新时代中国特色社会主义思想确立为党必须长期坚持的指导思想并庄严地写入党章，实现了党的指导思想的与时俱进。"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "single", "num": 13, "stem": "郑重地把习近平新时代中国特色社会主义思想载入宪法是在（）", "options": {"A": "2017 年党的十九大", "B": "2018 年宪法修正案", "C": "2021 年党的十九届六中全会", "D": "2022 年党的二十大"}, "answer": "B", "analysis": "2018 年，十三届全国人大一次会议通过的宪法修正案，郑重地把习近平新时代中国特色社会主义思想载入宪法，实现了国家指导思想的与时俱进。"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "single", "num": 14, "stem": "我们党第一次对中国特色社会主义理论进行系统概括是在（）", "options": {"A": "1987 年党的十三大报告", "B": "1992 年党的十四大报告", "C": "1997 年党的十五大报告", "D": "2002 年党的十六大报告"}, "answer": "A", "analysis": "党的十三大报告明确指出：……这是我们党第一次对中国特色社会主义理论进行系统概括，也标志着邓小平理论轮廓的形成。"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "single", "num": 15, "stem": "在党的重要文件中首次提出“中国特色社会主义理论体系”的科学概念是在（）", "options": {"A": "2002 年党的十六大", "B": "2007 年党的十七大", "C": "2012 年党的十八大", "D": "2017 年党的十九大"}, "answer": "B", "analysis": "2007 年党的十七大提出“中国特色社会主义理论体系”的科学概念。"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "multi", "num": 1, "stem": "20 世纪70 年代，整个世界发生着大变动大调整，这种变动调整的剧烈和深刻程度远远超出了人们的预料。最显著的变化，就是（）", "options": {"A": "和平与发展成为时代主题", "B": "世界多极化和经济全球化深入发展", "C": "战争与革命仍然是时代主题", "D": "综合国力竞争日趋激烈"}, "answer": "ABD", "analysis": "20 世纪70 年代，整个世界发生着大变动大调整，这种变动调整的剧烈和深刻程度远远超出了人们的预料。最显著的变化，就是和平与发展成为时代主题，世界多极化和经济全球化深入发展，综合国力竞争日趋激烈。"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "multi", "num": 2, "stem": "20 世纪80 年代末90 年代初，中国特色社会主义理论体系形成发展面临的国际背景包括（）", "options": {"A": "美苏两极依旧长期持久地进行激烈对抗", "B": "和平与发展仍然是时代的主题，世界多极化仍然在曲折中获得发展", "C": "经济全球化浪潮正在蓬勃发展", "D": "科技进步日新月异"}, "answer": "BCD", "analysis": "1991 年苏联解体，美苏两极对抗的“冷战”国际格局结束。所以A 错。其它BCD 项根据2023 年版教材120 页内容，正确。"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "multi", "num": 4, "stem": "习近平新时代中国特色社会主义思想科学回答的重大时代课题包括（）", "options": {"A": "新时代坚持和发展什么样的中国特色社会主义、怎样坚持和发展什么样的中国特色社会主义", "B": "建设什么样的社会主义现代化强国、怎样建设社会主义现代化强国", "C": "实现什么样的发展、怎样发展", "D": "建设什么样的长期执政的马克思主义政党、怎样建设长期执政的马克思主义政党"}, "answer": "ABD", "analysis": ""}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "multi", "num": 5, "stem": "下列属于邓小平南方谈话中提出的重要论断的有（）", "options": {"A": "关于社会主义经济上有计划商品经济的观点", "B": "革命是解放生产力、改革也是解放生产力", "C": "“三个有利于”标准", "D": "社会主义可以搞市场经济"}, "answer": "BCD", "analysis": "1992 年，针对人们思想中普遍存在的疑虑，邓小平南方谈话重申了深化改革、加速发展的必要性和重要性，并从中国实际出发，站在时代的高度，深刻地总结了十多年改革开放的经验教训，在一系列重大的理论和实践问题上，提出了一系列重要论断，如社会主义的本质是解放生产力，发展生产力，消灭剥削，消除两极分化，最终达到共同富裕；“三个有利于”标准；社会主义可以搞市场经济；革命是解放生产力，改革也是解放生产力；不坚持社会主义，不改革开放，不发展经济，不改善人民生活，就没有出路；改革开放胆子要大一些，敢于试验，看准了的，就大胆地试，大胆地闯；要提倡科学，靠科学才有希望；要坚持两手抓，一手抓改革开放，一手抓打击各种犯罪活动，这两只手都要硬。所以BCD正确。A 项属于党的十三大报告中的主要观点。"}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "multi", "num": 6, "stem": "以习近平同志为核心的党中央统筹把握（），坚持把马克思主义基本原理同中国具体实际相结合、同中华优秀传统文化相结合……", "options": {"A": "中华民族伟大复兴战略全局", "B": "世界百年未有之大变局", "C": "中华民族伟大复兴", "D": "中国特色社会主义的前进方向"}, "answer": "AB", "analysis": ""}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "multi", "num": 7, "stem": "习近平新时代中国特色社会主义思想是（）。", "options": {"A": "当代中国马克思主义", "B": "21 世纪马克思主义", "C": "创新的马克思主义", "D": "时代的马克思主义"}, "answer": "AB", "analysis": ""}, {"chapter": "第五章中国特色社会主义理论体系的形成发展", "type": "multi", "num": 8, "stem": "中国特色社会主义理论体系是中国共产党长期探索的伟大理论创造，同（）一脉相承又与时俱进，是马克思主义中国化时代化的重大理论成果。", "options": {"A": "空想社会主义", "B": "科学社会主义", "C": "马克思列宁主义", "D": "毛泽东思想"}, "answer": "CD", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "single", "num": 1, "stem": "邓小平理论首要的基本的理论问题是（）", "options": {"A": "什么是社会主义，怎样建设社会主义", "B": "建设什么样的党、怎样建设党", "C": "实现什么样的发展、怎样发展", "D": "新时代坚持和发展什么样的中国特色社会主义、怎样坚持和发展什么样的中国特色社会主义"}, "answer": "A", "analysis": "简要解析：邓小平指出：“我们建设社会主义的方向是完全正确的，但什么叫社会主义，怎样建设社会主义，还在摸索之中”，并反复强调必须首先搞清楚这个问题（2023年版教材第150 页）。以邓小平同志为主要代表的中国共产党人，团结带领全党全国各族人民，深刻总结新中国成立以来正反两方面经验，围绕什么是社会主义，怎样建设社会主义这一根本问题，借鉴世界社会主义历史经验，创立了邓小平理论（2023 年版教材第7 页）。"}, {"chapter": "第六章邓小平理论", "type": "single", "num": 2, "stem": "邓小平理论的精髓是（）", "options": {"A": "实事求是", "B": "解放思想、实事求是", "C": "解放思想、实事求是、与时俱进", "D": "解放思想、实事求是、与时俱进、求真务实"}, "answer": "B", "analysis": "简要解析：所谓精髓，对于理论而言，指的是能使这一理论得以形成和发展并贯穿始终，同时又体现在这一理论中最本质的东西。解放思想、实事求是，是邓小平理论的精髓。"}, {"chapter": "第六章邓小平理论", "type": "single", "num": 3, "stem": "下列（）是开辟新时期新道路的宣言书，标志着党重新确立了马克思主义的思想路线、政治路线和组织路线。", "options": {"A": "《实践是检验真理的唯一标准》的发表", "B": "邓小平发表《解放思想，实事求是，团结一致向前看》的重要讲话", "C": "《中国共产党第十一届中央委员会第三次全体会议公报》", "D": "邓小平南方谈话"}, "answer": "B", "analysis": "简要解析：邓小平在1978 年中央工作会议上发表了《解放思想，实事求是，团结一致向前看》的重要讲话，这实际上是党的十一届三中全会的主题报告，是开辟新时期新道路的宣言书，标志着党重新确立了马克思主义的思想路线、政治路线和组织路线。"}, {"chapter": "第六章邓小平理论", "type": "single", "num": 4, "stem": "系统地阐述了社会主义初级阶段的科学内涵是在（）", "options": {"A": "党的十一届三中全会", "B": "党的十二大", "C": "党的十三大", "D": "党的十四大"}, "answer": "C", "analysis": "简要解析：党的十三大系统地阐述了社会主义初级阶段的科学内涵。"}, {"chapter": "第六章邓小平理论", "type": "single", "num": 5, "stem": "邓小平对社会主义本质的概括中，属于从生产关系角度认识和把握社会主义本质的是（）", "options": {"A": "解放生产力", "B": "发展生产力", "C": "消灭剥削，消除两级分化", "D": "最终达到共同富裕"}, "answer": "C", "analysis": "简要解析：邓小平对社会主义本质的概括中，“解放生产力，发展生产力”是从社会主义社会的生产力角度认识和把握社会主义本质；“消灭剥削，消除两级分化”属于从生产关系角度认识和把握社会主义本质；“最终达到共同富裕”是从发展目标角度认识和把握社会主义本质。"}, {"chapter": "第六章邓小平理论", "type": "single", "num": 6, "stem": "提出党在社会主义初级阶段的基本路线是在（）", "options": {"A": "党的十一届三中全会", "B": "党的十二大", "C": "党的十三大", "D": "党的十四大"}, "answer": "C", "analysis": "简要解析：党的十三大从我国社会主义初级阶段的基本国情出发，在科学认识我国社会主要矛盾的基础上，提出了党在社会主义初级阶段的基本路线：“领导和团结全国各族人民，以经济建设为中心，坚持四项基本原则，坚持改革开放，自力更生，艰苦创业，为把我国建设成为富强、民主、文明的社会主义现代化国家而奋斗。”"}, {"chapter": "第六章邓小平理论", "type": "single", "num": 7, "stem": "根据邓小平理论，社会主义的根本任务是（）", "options": {"A": "解放生产力", "B": "发展生产力", "C": "消灭剥削，消除两极分化", "D": "最终实现共同富裕"}, "answer": "B", "analysis": "简要解析：社会主义的根本任务是发展生产力。"}, {"chapter": "第六章邓小平理论", "type": "single", "num": 8, "stem": "党把邓小平提出的“小康社会”思想和“三步走”的发展战略构想确定下来的是（）", "options": {"A": "党的十一届三中全会", "B": "党的十二大", "C": "党的十三大", "D": "党的十四大"}, "answer": "C", "analysis": "简要解析：党的十三大把邓小平提出的“小康社会”思想和“三步走”的发展战略构想确定下来。"}, {"chapter": "第六章邓小平理论", "type": "single", "num": 9, "stem": "邓小平理论中分三步走基本实现现代化的发展战略，第三步战略目标是（）", "options": {"A": "到21 世纪中叶，人均国民生产总值达到中等发达国家水平，人民生活比较富裕，基本实现现代化。然后，在这个基础上继续前进", "B": "把我国建设成为富强、民主、文明的社会主义现代化国家", "C": "把我国建设成为富强、民主、文明、和谐的社会主义现代化国家", "D": "把我国建设成为富强、民主、文明、和谐、美丽的社会主义现代化强国"}, "answer": "A", "analysis": "简要解析：分三步走基本实现现代化的发展战略，第三步战略目标是：到21 世纪中叶，人均国民生产总值达到中等发达国家水平，人民生活比较富裕，基本实现现代化。然后，在这个基础上继续前进"}, {"chapter": "第六章邓小平理论", "type": "single", "num": 10, "stem": "（）是邓小平对世界时代主题的判断。", "options": {"A": "和平与发展", "B": "革命与战争", "C": "改革与开放", "D": "结束文革"}, "answer": "A", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "single", "num": 11, "stem": "（）基于对中国国情的准确把握，揭示了当代中国的历史方位，为建设中国特色社会主义提供了总依据。", "options": {"A": "社会主义初级阶段理论", "B": "以经济建设为中心论", "C": "四项基本原则", "D": "党在初经阶段的基本路线"}, "answer": "A", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "single", "num": 12, "stem": "邓指出：解放思想，就是使思想和实际相符合，使主客观相符合，就是（）", "options": {"A": "实事求是", "B": "社会主义本质", "C": "自力更生", "D": "与时俱进"}, "answer": "A", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "single", "num": 13, "stem": "社会主义社会发展生产力的目的不是为少数人谋利益，而是要使全体社会成员过上富裕幸福的生活，是要实现（）。", "options": {"A": "精神文明", "B": "共同富裕", "C": "可持续发展", "D": "人类命运共同体"}, "answer": "B", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "single", "num": 14, "stem": "邓小平强调，发展是硬道理，中国解决所有问题的关键是要靠自己的发展。社会主义社会发展的直接动力是（）。", "options": {"A": "改革", "B": "革命", "C": "和谐", "D": "科学技术"}, "answer": "A", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "single", "num": 15, "stem": "建设“富强、民主、文明的社会主义现代化国家”，这是基本路线规定的党在社会主义初级阶段的（）。", "options": {"A": "领导力量、依靠力量", "B": "根本立足点", "C": "奋斗目标", "D": "基本途径"}, "answer": "C", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "single", "num": 16, "stem": "“和平统一、一国两制”的核心是（）。", "options": {"A": "坚持一个中国", "B": "实行两种制度", "C": "实现两岸三通", "D": "放弃使用武力"}, "answer": "A", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "single", "num": 17, "stem": "（）是我们党的优良传统，也是实现社会主义初级阶段奋斗目标的根本立足点。", "options": {"A": "自力更生，艰苦创业", "B": "自力更生，团结一致", "C": "团结一致，奋勇前进", "D": "艰苦创业，奋勇前进"}, "answer": "A", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "single", "num": 18, "stem": "邓小平明确指出：“改革是中国的第二次革命。”所谓第二次革命，是与中国共产党领导的第一次革命相对而言的。社会主义改革的性质是（）。", "options": {"A": "社会主义基本制度的改革", "B": "社会主义经济运行方式的改变", "C": "社会主义原有体制的修补", "D": "社会主义制度的自我完善和发展"}, "answer": "D", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "single", "num": 19, "stem": "社会主义市场经济理论认为，计划经济和市场经济属于（）。", "options": {"A": "不同的资源配置方式", "B": "不同的经济增长方式", "C": "不同的经济制度的范畴", "D": "不同的生产关系的范畴"}, "answer": "A", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "single", "num": 20, "stem": "党的十三大召开前夕，邓小平强调指出：“社会主义本身是共产主义的初级阶段，而我们中国又处在社会主义的初级阶段，就是不发达的阶段，一切都要从这个实际出发，根据这个实际来制订规划。”这一论述()", "options": {"A": "首次提出了社会主义初级阶段概念", "B": "首次系统阐述了社会主义初级阶段理论", "C": "首次把社会主义初级阶段作为事关全局的基本国情加以把握", "D": "首次对社会主义发展阶段进行了划分"}, "answer": "C", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 1, "stem": "邓小平理论的精髓中，解放思想通常包括两种情况（）", "options": {"A": "对原先的认识进行再认识，这其中既有对原先认识中那些正确部分的坚持，也有对原先认识中那些错误部分的纠正", "B": "解放思想、实事求是，一切从社会主义初级阶段的实际出发", "C": "解放思想、实事求是，破除了僵化的社会主义模式观念，坚持走自己的路。", "D": "在研究新情况、解决新问题、总结新经验的基础上，形成新的正确认识"}, "answer": "AD", "analysis": "简要解析：解放思想通常包括两种情况：一是对原先的认识进行再认识，这其中既有对原先认识中那些正确部分的坚持，也有对原先认识中那些错误部分的纠正；二是在研究新情况、解决新问题、总结新经验的基础上，形成新的正确认识。"}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 2, "stem": "党的十三大系统地阐述了社会主义初级阶段的科学内涵，阐明了社会主义初级阶段这个论断，包括两层含义（）", "options": {"A": "我国社会已经是社会主义社会。我们必须坚持而不能离开社会主义", "B": "我国的社会主义社会还处在初级阶段", "C": "社会主义初级阶段是任何社会主义国家都不可逾越的必经阶段", "D": "社会主义初级阶段和共产主义的初级阶段是同一个阶段"}, "answer": "AB", "analysis": "简要解析：党的十三大系统地阐述了社会主义初级阶段的科学内涵。首先，阐明了社会主义初级阶段这个论断包括两层含义：第一，我国社会已经是社会主义社会。我们必须坚持而不能离开社会主义。第二，我国的社会主义社会还处在初级"}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 3, "stem": "根据邓小平对社会主义本质的概括，实现共同富裕要（）", "options": {"A": "以社会主义公有制为根本保证，坚持公有制为主体", "B": "以社会主义市场经济为根本保证，坚持私有制为根本", "C": "以消灭剥削、消除两极分化为前提条件", "D": "以一手抓物质文明、一手抓精神文明为前提条件"}, "answer": "AC", "analysis": "简要解析：实现共同富裕要以坚持公有制为根本保证，坚持公有制为主体，要以消灭剥削、消除两极分化为前提条件。"}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 4, "stem": "党在社会主义初级阶段的基本路线中，（）是实现奋斗目标的基本途径。", "options": {"A": "领导和团结全国各族人民", "B": "以经济建设为中心", "C": "坚持四项基本原则", "D": "坚持改革开放简要解析：“以经济建设为中心，坚持四项基本原则，坚持改革开放”是实现奋斗目标的基本途径。其中，“以经济建设为中心”回答了社会主义的根本任务问题，“坚持四项基本原则”回答了解放和发展生产力的政治保证问题，“坚持改革开放”回答了社会主义的发展动力和外部条件问题。它们是一个整体，集中体现了我国社会主义现代化建设的战略布局，揭示了中国特色社会主义的客观规律和发展道路。"}, "answer": "BCD", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 5, "stem": "关于中国农业的长远发展战略，邓小平提出了两个飞跃的思想，具体是指（）", "options": {"A": "第一个飞跃是由传统农业转变为现代农业", "B": "第一个飞跃，是废除人民公社，实行家庭联产承包为主的责任制", "C": "第二个飞跃是由现代农业转变为智慧农业", "D": "第二个飞跃，是适应科学种田和生产社会化的需要，发展适度规模经营，发展集体经济"}, "answer": "BD", "analysis": "简要解析：关于中国农业的长远发展战略，邓小平提出了两个飞跃的思想。“第一个飞跃，是废除人民公社，实行家庭联产承包为主的责任制。这是一个很大的前进，要长期坚持不变。第二个飞跃，是适应科学种田和生产社会化的需要，发展适度规模经营，发展集体经济。这是又一个很大的前进，当然这是很长的过程。”"}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 6, "stem": "邓小平的社会主义市场经济理论具有丰富的内涵，包括（）", "options": {"A": "计划经济和市场经济不是划分社会制度的标志，计划经济不等于社会主义，市场经济也不等于资本主义", "B": "计划和市场都是经济手段，对经济活动的调节各有优劣，社会主义实行市场经济是要把两者优势结合起来", "C": "市场经济作为资源配置手段本身不具有制度属性，可以和不同的社会制度结合，从而表现出不同的性质", "D": "社会主义市场经济是以私有制为根本特征的经济简要解析：邓小平的社会主义市场经济理论具有丰富的内涵：一是计划经济和市场经济不是划分社会制度的标志，计划经济不等于社会主义，市场经济也不等于资本主义；二是计划和市场都是经济手段，对经济活动的调节各有优劣，社会主义实行市场经济是要把两者优势结合起来；三是市场经济作为资源配置手段本身不具有制度属性，可以和不同的社会制度结合，从而表现出不同的性质。坚持社会主义制度与市场经济的结合，是社会主义市场经济的特色所在、优势所在。"}, "answer": "ABC", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 7, "stem": "下列属于邓小平“两手抓，两手都要硬”理论的有（）", "options": {"A": "台湾问题", "B": "香港问题", "C": "澳门问题", "D": "南海问题"}, "answer": "BC", "analysis": "简要解析：“一国两制”提出后，中国政府成功解决了历史遗留的香港和澳门问题，相继恢复对香港、澳门行使主权，洗雪了中华民族的百年耻辱。"}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 9, "stem": "邓小平对时代主题的判断，其基本点包括（）", "options": {"A": "世界大战在一个相当长的时期内可以避免，我们有可能争取较长时期的和平环境", "B": "从经济角度来说，和平与发展是当今世界两大带有全球性的战略问题，是东西方之间、发达国家与发展中国家之间矛盾全局的集中体现", "C": "和平与发展是相辅相成的，世界和平是促进各国共同发展的前提条件，各国的共同发展则是保持世界和平的重要基础", "D": "和平与发展成为时代主题，并不意味着这两个问题已经解决。"}, "answer": "ABCD", "analysis": "简要解析：邓小平对时代主题的判断，其基本点是：第一，世界大战在一个相当长的时期内可以避免，我们有可能争取较长时期的和平环境；第二，从经济角度来说，和平与发展是当今世界两大带有全球性的战略问题，是东西方之间、发达国家与发展中国家之间矛盾全局的集中体现；第三，和平与发展是相辅相成的，"}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 10, "stem": "1989 年以后，国际局势风云变幻，世界社会主义事业出现严重曲折。邓小平纵观全局，高瞻远瞩，对错综复杂的国际形势作出了精辟的判断，对我国对外关系提出了重要的指导方针。邓小平指出：“对于国际局势，概括起来就是三句话（）", "options": {"A": "冷静观察", "B": "稳住阵脚", "C": "韬光养晦", "D": "沉着应付"}, "answer": "ABD", "analysis": "简要解析：1989 年以后，国际局势风云变幻，世界社会主义事业出现严重曲折。邓小平纵观全局，高瞻远瞩，对错综复杂的国际形势作出了精辟的判断，对我国对外关系提出了重要的指导方针。邓小平指出：“对于国际局势，概括起来就是三句话：第一句话，冷静观察；第二句话，稳住阵脚；第三句话，沉着应付。不要急，也急不得。要冷静、冷静、再冷静，埋头实干，做好一件事，我们自己的事。”1990 年7 月，邓小平还指出：“去年以来一些国家对中国实行制裁。我认为，第一，他们没有资格制裁中国；第二，实践证明中国有抵抗制裁的能力。”“中国永远不会接受别人干涉内政。”"}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 11, "stem": "社会主义市场经济理论的要点有（）。", "options": {"A": "计划经济和市场经济不是划分社会制度的标志，计划经济不等于社会主义，市场经济也不等于资本主义", "B": "计划和市场都是经济手段，对经济活动的调节各有优劣，社会主义实行市场经济要把两者优势结合起来", "C": "市场经济作为资源配置的一种方式本身不具有制度属性，可以和不同的社会制度结合，从而表现出不同的性质。", "D": "社会主义社会市场经济更强调宏观调控的作用。"}, "answer": "ABC", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 12, "stem": "邓小平理论是马克思列宁主义基本原理与当代中国实际和时代特征相结合的产物。以下关于邓小平理论的历史地位说法正确的()", "options": {"A": "马克思列宁主义、毛泽东思想的继承和发展", "B": "中国革命的行动指南", "C": "改革开放和社会主义现代化建设的科学指南", "D": "中国特色社会主义理论体系的开篇之作"}, "answer": "ACD", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 13, "stem": "邓小平开创性地提出了一系列具有浓厚中国特色的新概念新范畴，包括（）", "options": {"A": "社会主义本质", "B": "社会主义初级阶段", "C": "改革开放", "D": "一国两制"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 14, "stem": "邓小平作的《解放思想，实事求是，团结一致向前看》的重要讲话标志着党重新确立了()。", "options": {"A": "思想路线", "B": "政治路线", "C": "组织路线", "D": "文化路线"}, "answer": "ABC", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 15, "stem": "改革是一项崭新的事业，是一个大实验。判断改革和各方面是非得失，归根到底，主要看（）。", "options": {"A": "是否有利于巩固社会主义制度", "B": "是否有利于提高人民的生活水平", "C": "是否有利于发展社会主义社会的生产力", "D": "是否有利于增强社会主义国家的综合国力"}, "answer": "BCD", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 16, "stem": "邓小平的一系列“两手抓”思想包括（）。", "options": {"A": "一手抓物质文明，一手抓精神文明", "B": "一手抓建设，一手抓法制", "C": "一手抓经济，一手抓科学技术", "D": "一手抓改革开放，一手抓惩治腐败"}, "answer": "ABD", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 17, "stem": "社会主义制度建立以后，也有一个如何认清国情、正确判断我国社会所处历史方位的问题。社会主义初级阶段理论（）。", "options": {"A": "使我们党对社会主义建设的长期性、复杂性、艰巨性有了更加清醒的认识", "B": "基于对中国国情的准确把握，揭示了当代中国的历史方位，为建设中国特色社会主义提供了总依据", "C": "是对马克思主义关于社会主义发展阶段理论的重大发展和重大突破", "D": "正确回答了邓小平理论首要的基本的理论问题"}, "answer": "ABC", "analysis": ""}, {"chapter": "第六章邓小平理论", "type": "multi", "num": 18, "stem": "为了顺利实现“三步走”发展战略，邓小平提出（ABC）", "options": {"A": "以重点带动全局的思想", "B": "允许和鼓励一部分地区、一部分人先富起来逐步实现共同富裕的思想", "C": "“台阶式”发展的思想", "D": "改革开放的思想"}, "answer": "ABC", "analysis": ""}, {"chapter": "第七章“三个代表”重要思想", "type": "single", "num": 1, "stem": "根据“三个代表”重要思想，生产力各要素中，最活跃的因素是（）", "options": {"A": "劳动资料", "B": "劳动对象", "C": "人", "D": "人与人之间结成的社会关系"}, "answer": "C", "analysis": "人是生产力中最活跃的因素。"}, {"chapter": "第七章“三个代表”重要思想", "type": "single", "num": 2, "stem": "发展生产力的决定因素是（）", "options": {"A": "劳动资料", "B": "劳动对象", "C": "科技进步和创新", "D": "劳动者"}, "answer": "C", "analysis": "科技进步和创新是发展生产力的决定因素。"}, {"chapter": "第七章“三个代表”重要思想", "type": "single", "num": 3, "stem": "发展先进文化的重要内容和中心环节是（）", "options": {"A": "弘扬民族精神", "B": "加强社会主义思想道德建设", "C": "做好思想政治工作", "D": "教育"}, "answer": "B", "analysis": "弘扬民族精神是发展先进文化极为重要的任务。加强社会主义思想道德建设是发展先进文化的重要内容和中心环节。做好思想政治工作是发展先进文化的重要任务。教育是发展先进文化、建设物质文明和精神文明的基础工程。"}, {"chapter": "第七章“三个代表”重要思想", "type": "single", "num": 4, "stem": "（）是经济工作和其它一切工作的生命线，是我们党和社会主义国家的重要政治优势。", "options": {"A": "经济工作", "B": "意识形态工作", "C": "思想政治工作", "D": "群众路线"}, "answer": "C", "analysis": "思想政治工作是经济工作和其它一切工作的生命线，是我们党和社会主义国家的重要政治优势。"}, {"chapter": "第七章“三个代表”重要思想", "type": "single", "num": 5, "stem": "根据“三个代表”重要思想，中国特色社会主义是靠（）来不断巩固和推进的。社会主义要强大，体现优越性，关键在（）", "options": {"A": "发展，改革", "B": "改革，发展", "C": "发展，发展", "D": "改革，改革"}, "answer": "C", "analysis": "中国特色社会主义是靠发展来不断巩固和推进的。社会主义要强大，体现优越性，关键在发展。参见2023 版教材第202 页。"}, {"chapter": "第七章“三个代表”重要思想", "type": "single", "num": 6, "stem": "正式把建立社会主义市场经济体制确立为我国经济体制改革的目标是在（）", "options": {"A": "党的十三大", "B": "党的十四大", "C": "党的十四届三中全会", "D": "党的十五大"}, "answer": "B", "analysis": "在建立什么样的经济体制问题上，江泽民根据邓小平南方谈话精神，明确提出使用“社会主义市场经济体制”这个提法。党的十四大正式把建立社会主义市场经济体制确立为我国经济体制改革的目标。党的十四届三"}, {"chapter": "第七章“三个代表”重要思想", "type": "single", "num": 7, "stem": "根据“三个代表”重要思想，要在更大程度上发挥市场在资源配置中的（）", "options": {"A": "决定性作用", "B": "主导性作用", "C": "关键性作用", "D": "基础性作用"}, "answer": "D", "analysis": "根据“三个代表”重要思想，建立社会主义市场经济体制，要要在更大程度上发挥市场在资源配置中的基础性作用。党的十八届三中全会通过的《中共中央关于全面深化改革若干重大问题的决定》明确提出，紧紧围绕使市场在资源配置中起决定性作用深化经济体制。"}, {"chapter": "第七章“三个代表”重要思想", "type": "single", "num": 8, "stem": "（）我国正式加入世界贸易组织，标志着我国对外开放进入一个新的阶段", "options": {"A": "2001 年11 月", "B": "2001 年12 月", "C": "2002 年11 月", "D": "2002 年12 月"}, "answer": "B", "analysis": "四届部长级会议通过中国加入世界贸易组织的决定，同年12 月，中国正式加入世界贸易组织。"}, {"chapter": "第七章“三个代表”重要思想", "type": "single", "num": 9, "stem": "根据“三个代表“重要思想，坚持中国共产党的领导，核心是（）", "options": {"A": "加强党的执政能力建设", "B": "坚持用马克思主义武装全党", "C": "坚持党的先进性", "D": "坚持正确的用人导向"}, "answer": "C", "analysis": ""}, {"chapter": "第七章“三个代表”重要思想", "type": "single", "num": 10, "stem": "根据“三个代表“重要思想，领导干部一定要讲学习、讲政治、讲正气。其中（）是前提。", "options": {"A": "讲学习", "B": "讲政治", "C": "讲正气", "D": "讲纪律"}, "answer": "A", "analysis": "简要解析：领导干部一定要讲学习、讲政治、讲正气。讲学习是前提，讲政治是核心。"}, {"chapter": "第七章“三个代表”重要思想", "type": "single", "num": 11, "stem": "“三个代表”重要思想在邓小平理论的基础上，（）", "options": {"A": "创造性地回答了什么是社会主义、怎样建设社会主义的问题", "B": "创造性地回答了建设什么样的党、怎样建设党的问题", "C": "进一步回答了建设什么样的党、怎样建设党的问题", "D": "创造性地回答了新形势下实现什么样的发展、怎样发展"}, "answer": "B", "analysis": "“三个代表”重要思想在邓小平理论的基础上，进一步回答了什么是社会主义、怎样建设社会主义的问题，创造性地回答了建设什么样的党、怎样建设党的问题。"}, {"chapter": "第七章“三个代表”重要思想", "type": "multi", "num": 1, "stem": "根据“三个代表”重要思想，（）始终是推动我国先进生产力发展和社会全面进步的根本力量。", "options": {"A": "科技", "B": "工人", "C": "农民", "D": "知识分子"}, "answer": "BCD", "analysis": "简要解析：广大工人、农民、知识分子始终是推动我国先进生产力发展和社会全面进步的根本力量。"}, {"chapter": "第七章“三个代表”重要思想", "type": "multi", "num": 2, "stem": "建立社会主义市场经济体制，必须坚持和完善公有制为主体、多种所有制经济共同发展的社会主义基本经济制度。根据这一要求，（）", "options": {"A": "公有资产在社会总资产中占优势地位", "B": "国有企业在社会企业中占优势地位", "C": "国有经济控制国民经济命脉，对经济发展起决定性作用", "D": "国有经济控制国民经济命脉，对经济发展起主导作用"}, "answer": "AD", "analysis": ""}, {"chapter": "第七章“三个代表”重要思想", "type": "multi", "num": 4, "stem": "在加入世界贸易组织谈判过程中，江泽民阐明了我国加入世界贸易组织的原则，包括（）", "options": {"A": "中国加入世界贸易组织是中国经济发展和改革开放的需要，同样世界贸易组织也需要中国。没有中国参加，世界贸易组织是不完整的，也不利于世界经济的发展", "B": "中国已经是发达国家，只能以发达国家的条件加入世界贸易组织。", "C": "中国是一个发展中国家，社会生产力还不发达，只能以发展中国家的条件加入世界贸易组织", "D": "中国加入世界贸易组织，权利和义务一定要平衡，中国不会接受过高的、超出中国承受能力的要价。"}, "answer": "ACD", "analysis": "在加入世界贸易组织谈判过程中，江泽民阐明了我国加入世界贸易组织的原则。第一，中国加入世界贸易组织是中国经济发展和改革开放的需要，同样世界贸易组织也需要中国。没有中国参加，世界贸易组织是不完整的，也不利于世界经济的发展。第二，中国是一个发展中国家，社会生产力还不发达，只能以发展中国家的条件加入世界贸易组织。第三，中国加入世界贸易组织，权利和义务一定要平衡，中国不会接受过高的、超出中国承受能力的要价。遵照这些指导原则，中国在加入世界贸易组织谈判过程中始终掌握主动权。"}, {"chapter": "第七章“三个代表”重要思想", "type": "multi", "num": 5, "stem": "“三个代表”重要思想从（）方面，揭示了社会主义制度自我完善和发展的途径，", "options": {"A": "物质基础", "B": "文化支撑", "C": "政治保证", "D": "社会基础"}, "answer": "ABD", "analysis": "“三个代表”重要思想从物质基础、文化支撑和社会基础三个方面揭示了社会主义制度自我完善和发展的途径，说明了只有具备雄厚的物质"}, {"chapter": "第七章“三个代表”重要思想", "type": "multi", "num": 6, "stem": "之所以要全面建设小康社会，是因为（）。", "options": {"A": "总体小康社会是低水平的、不全面的、不平衡的", "B": "我国人均生产的物质产品和物质财富较少，劳动生产率较低", "C": "总体小康社会偏重于满足物质消费，而文化消费还得不到有效满足", "D": "存在地区之间、城乡之间的发展不协调、不平衡问题"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第七章“三个代表”重要思想", "type": "multi", "num": 7, "stem": "江泽民同志在党的十五大报告中初步勾画了实现第三步战略目标的蓝图。关于第三步战略目标蓝图说法正确的是（）。", "options": {"A": "21 世纪第一个十年实现国民生产总值比2000 年翻一番，使人民的小康生活更加富裕，形成比较完善的社会主义市场经济体制", "B": "到建党一百年时，使国民经济更加发展，各项制度更加完善", "C": "到21 世纪中叶新中国成立一百年时，基本实现现代化，建成富强民主文明的社会主义国家", "D": "到21 世纪中叶新中国成立一百年时，基本实现现代化，建成富强民主文明和谐的社会主义国家"}, "answer": "ABC", "analysis": ""}, {"chapter": "第七章“三个代表”重要思想", "type": "multi", "num": 8, "stem": "推进党的建设新的伟大工程，重点是加强党的执政能力建设，不断提高（）的能力。", "options": {"A": "科学判断形势", "B": "驾驭市场经济", "C": "应对复杂局面", "D": "依法执政、总览全局"}, "answer": "ABCD", "analysis": ""}, {"chapter": "第八章科学发展观", "type": "single", "num": 1, "stem": "科学发展观的第一要义是（）", "options": {"A": "推动经济社会发展", "B": "以人为本", "C": "全面协调可持续", "D": "统筹兼顾"}, "answer": "A", "analysis": "推动经济社会发展是科学发展观的第一要义。"}, {"chapter": "第八章科学发展观", "type": "single", "num": 2, "stem": "科学发展观的核心立场是（）", "options": {"A": "推动经济社会发展", "B": "以人为本", "C": "全面协调可持续", "D": "统筹兼顾"}, "answer": "B", "analysis": "以人为本是科学发展观的核心立场"}, {"chapter": "第八章科学发展观", "type": "single", "num": 4, "stem": "科学发展观的根本方法是（）", "options": {"A": "推动经济社会发展", "B": "以人为本", "C": "全面协调可持续", "D": "统筹兼顾"}, "answer": "D", "analysis": "统筹兼顾是科学发展观的根本方法。"}, {"chapter": "第八章科学发展观", "type": "single", "num": 5, "stem": "作出了21 世纪头二十年对我国来说是一个必须紧紧抓住并且可以大有作为的重要战略机遇期的重大判断是在（）", "options": {"A": "党的十五大", "B": "党的十六大", "C": "党的十七大", "D": "党的十八大"}, "answer": "B", "analysis": "党的十六大在综合分析进入新世纪后国际国内形势变化的基础上，作出了21 世纪头二十年对我国来说是一个必须紧紧抓住并且可以大有作为的重要战略机遇期的重大判断。"}, {"chapter": "第八章科学发展观", "type": "single", "num": 6, "stem": "全面协调可持续中的“全面”是指：", "options": {"A": "发展要有协调性、均衡性，各个方面、各个环节的发展要相互适应、相互促进", "B": "发展要有全面性、整体性，不仅经济发展，而且各个方面都要发展", "C": "发展要有持久性、连续性，不仅当前要发展，而且要保证长远发展", "D": "发展要有速度、效率、时间，不仅追求公平、正义、平衡"}, "answer": "B", "analysis": "全面协调可持续中的“全面”是指发展要有全面性、整体性，不仅经济发展，而且各个方面都要发展。"}, {"chapter": "第八章科学发展观", "type": "single", "num": 9, "stem": "全面协调可持续中的“协调”是指：", "options": {"A": "发展要有协调性、均衡性，各个方面、各个环节的发展要相互适应、相互促进", "B": "发展要有全面性、整体性，不仅经济发展，而且各个方面都要发展", "C": "发展要有持久性、连续性，不仅当前要发展，而且要保证长远发展", "D": "发展要有速度、效率、时间，不仅追求公平、正义、平衡"}, "answer": "A", "analysis": "“协调”是指发展要有协调性、均衡性，各个方面、各个环节的发展要相互适应、相互促进。"}, {"chapter": "第八章科学发展观", "type": "single", "num": 10, "stem": "全面协调可持续中的“可持续”是指：", "options": {"A": "发展要有协调性、均衡性，各个方面、各个环节的发展要相互适应、相互促进", "B": "发展要有全面性、整体性，不仅经济发展，而且各个方面都要发展", "C": "发展要有持久性、连续性，不仅当前要发展，而且要保证长远发展", "D": "发展要有速度、效率、时间，不仅追求公平、正义、平衡"}, "answer": "C", "analysis": "“可持续”是指发展要有持久性、连续性，不仅当前要发展，而且要保证长远发展。"}, {"chapter": "第八章科学发展观", "type": "single", "num": 11, "stem": "根据科学发展观，（）是加快转变经济发展方式的关键。", "options": {"A": "全面深化经济体制改革", "B": "实施创新驱动发展战略", "C": "推动经济结构战略性调整", "D": "促进区域协调发展"}, "answer": "A", "analysis": "全面深化经济体制改革是加快转变经济发展方式的关键；实施创新驱动发展战略，是转变经济发展方式的重大战略决策；推动经济结构战略性调整，是提升国民经济整体素质、赢得国际竞争主动权的根本途径，是加快转变经济发展方式的主攻方向。促进区域协调发展是我国现代化建设中的重大战略。"}, {"chapter": "第八章科学发展观", "type": "single", "num": 12, "stem": "根据科学发展观，坚持中国特色社会主义政治发展道路，最根本的是要（）", "options": {"A": "坚持党的领导", "B": "坚持人民当家作主", "C": "坚持依法治国", "D": "坚持党的领导、人民当家作主和依法治国的有机统一"}, "answer": "D", "analysis": "坚持中国特色社会主义政治发展道路，最根本的是要坚持党的领导、人民当家作主和依法治国的有机统一。ABC 表述不完整。"}, {"chapter": "第八章科学发展观", "type": "single", "num": 13, "stem": "构建社会主义和谐社会的总要求包括（）①富强文明②民主法治③公平正义④诚信友爱⑤充满活力⑥安定有序⑦人与自然和谐相处", "options": {"A": "①②③④⑤⑥⑦", "B": "①②③④⑤⑥", "C": "②③④⑤⑥⑦", "D": "①②③⑤⑥⑦"}, "answer": "C", "analysis": "民主法治、公平正义、诚信友爱、充满活力、安定有序、人与自然和谐相处，是构建社会主义和谐社会的总要求。"}, {"chapter": "第八章科学发展观", "type": "single", "num": 14, "stem": "胡锦涛指出：“（）是马克思主义政党的本质属性，是马克思主义政党的生命所系、力量所在。”", "options": {"A": "先进性", "B": "纯洁性", "C": "革命性", "D": "无产阶级属性"}, "answer": "A", "analysis": "胡锦涛指出：“先进性是马克思主义政党的本质属性，是马克思主义政党的生命所系、力量所在。”"}, {"chapter": "第八章科学发展观", "type": "single", "num": 15, "stem": "胡锦涛这个重大判断()，深刻总结了国内外社会主义建设的历史经验，深化了对社会主义本质的认识。", "options": {"A": "“社会和谐是中国特色社会主义的本质属性。”", "B": "“社会主义核心价值体系是根源于民族优秀文化和社会主义先进文化并吸收人类文明成果发展起来的”", "C": "“每一个共产党员都要把人民放在心中最高位置，尊重人民主体地位，尊重人民首创精神，拜人民为师，”", "D": "“物质贫乏不是社会主义，精神空虚也不是社会主义。没有社会主义文化繁荣发展，就没有社会主义现代化”"}, "answer": "A", "analysis": ""}, {"chapter": "第八章科学发展观", "type": "multi", "num": 1, "stem": "关于以人为本，下列说法正确的是（）", "options": {"A": "以人为本，继承了中国的民本思想，但又与它存在着实质上的区别", "B": "以人为本也不同于西方的人本主义", "C": "以人为本是科学发展观的核心立场", "D": "以人为本坚持了唯心主义的立场"}, "answer": "ABC", "analysis": "以人为本是科学发展观的核心立场。以人为本，继承了中国的民本思想，但又与它存在着实质上的区别。以人为本也不同于西方的人本主义。所以ABC 正确。以人为本坚持了历史唯物主义的基本立场和基本观点。所以D 错。"}, {"chapter": "第八章科学发展观", "type": "multi", "num": 2, "stem": "坚持以人为本，就要（）", "options": {"A": "坚持发展为了人民，始终把最广人民的根本利益放在第一位", "B": "坚持发展依靠人民，从人民的伟大创造中汲取智慧和力量", "C": "坚持发展成果由人民共享，着力提高人民物质文化生活水平", "D": "坚持必须培养高素质创新型人才"}, "answer": "ABC", "analysis": ""}, {"chapter": "第八章科学发展观", "type": "multi", "num": 3, "stem": "实现（），是我国社会主义现代化建设的战略任务，也是加快形成新的经济发展方式、促进经济持续健康发展的重要动力。", "options": {"A": "工业化", "B": "信息化", "C": "城镇化", "D": "农业现代化"}, "answer": "ABCD", "analysis": "实现工业化、信息化、城镇化、农业现代化，是我国社会主义现代化建设的战略任务，也是加快形成新的经济发展方式、促进经济持续健康发展的重要动力。"}, {"chapter": "第八章科学发展观", "type": "multi", "num": 4, "stem": "我们党领导人民在长期革命、建设、改革实践中，经过反复探索、不断总结，逐步建立起一套适合中国国情的社会主义政治制度。下列说法正确的有（）", "options": {"A": "人民代表大会制度是我国的根本政治制度，是全国各族人民当家作主的根本途径和最高实现形式，是中国社会主义民主政治最鲜明的特点。", "B": "中国共产党领导的多党合作和政治协商制度是符合我国国情、具有鲜明中国特色的社会主义新型政党制度。", "C": "民族区域自治制度是我们党解决民族问题的一个重大创造", "D": "完善基层群众自治制度，发展基层民主，是社会主义民主政治建设的基础"}, "answer": "ABCD", "analysis": "坚持和完善社会主义政治制度。发展社会主义民主政治，最重要的就是要坚持好、发展好适合我国国情的社会主义政治制度。我们党领导人民在长期革命、建设、改革实践中，经过反复探索、不断总结，逐步建立起一套适合中国国情的社会主义政治制度。人民代表大会制度是我国的根本政治制度，是全国各族人民当家作主的根本途径和最高实现形式，是中国社会主义民主政治最鲜明的特点。中国共产党领导的多党合作和政治协"}, {"chapter": "第八章科学发展观", "type": "multi", "num": 5, "stem": "社会主义核心价值体系的基本内容包括（）", "options": {"A": "马克思主义指导思想", "B": "中国特色社会主义共同理想", "C": "以爱国主义为核心的民族精神和以改革创新为核心的时代精神", "D": "社会主义荣辱观"}, "answer": "ABCD", "analysis": "马克思主义指导思想、中国特色社会主义共同理想、以爱国主义为核心的民族精神和以改革创新为核心的时代精神、社会主义荣辱观，共同构成社会主义核心价值体系的基本内容。它鲜明地回答了在新的历史条件下，我们党用什么样的精神旗帜团结带领全体人民开拓前进、中华民族以什么样的精神风貌屹立于世界民族之林的重大问题。"}, {"chapter": "第八章科学发展观", "type": "multi", "num": 6, "stem": "2012 年11 月，中共十八大报告明确提出“三个倡导”，是对社会主义核心价值观的最新概括。这“三个倡导”包括（）", "options": {"A": "倡导富强、民主、文明、和谐", "B": "倡导自由、平等、公正、法治", "C": "倡导富强、文明、和谐、美丽", "D": "倡导爱国、敬业、诚信、友善"}, "answer": "ABD", "analysis": "2012 年11 月，中共十八大报告明确提出“三个倡导”，即“倡导富强、民主、文明、和谐，倡导自由、平等、公正、法治，倡导爱国、敬业、诚信、友善，积极培育社会主义核心价值观”，这是对社会主义核心价值观的最新概括。"}, {"chapter": "第八章科学发展观", "type": "multi", "num": 8, "stem": "胡锦涛指出：“新形势下，党面临()的是长期的、复杂的、严峻的”", "options": {"A": "执政考验", "B": "改革开放考验", "C": "外部环境考验", "D": "市场经济考验"}, "answer": "ABCD", "analysis": "胡锦涛指出：“新形势下，党面临的执政考验、改革开放考验、市场经济考验、外部环境考验是长期的、复杂的、严峻的，精神懈怠危险、能力不足危险、脱离群众危险、消极腐败危险更加尖锐地摆在全党面前。”"}, {"chapter": "第八章科学发展观", "type": "multi", "num": 9, "stem": "胡锦涛指出：新形势下，以下哪些()更加尖锐地摆在全党面前。", "options": {"A": "精神懈怠危险", "B": "能力不足危险", "C": "脱离群众危险", "D": "消极腐败危险"}, "answer": "ABCD", "analysis": "简要解析：胡锦涛指出：“新形势下，党面临的执政考验、改革开放考验、市场经济考验、外部环境考验是长期的、复杂的、严峻的，精神懈怠危险、能力不足危险、脱离群众危险、消极腐败危险更加尖锐地摆在全党面前。”"}, {"chapter": "第八章科学发展观", "type": "multi", "num": 10, "stem": "科学发展观的历史地位包括（）", "options": {"A": "是中国特色社会主义理论体系的开篇之作", "B": "是21 世纪马克思主义", "C": "是中国特色社会主义理论体系在新世纪新阶段的接续发展", "D": "是全面建设小康社会、加快推进社会主义现代化的根本指针"}, "answer": "CD", "analysis": "简要解析：科学发展观是中国特色社会主义理论体系在新世纪新阶段的接续发展，是全面建设小康社会、加快推进社会主义现代化的根本指针。"}, {"chapter": "第八章科学发展观", "type": "multi", "num": 11, "stem": "以人为本是科学发展观的核心立场，集中体现了()", "options": {"A": "马克思主义历史唯物论的基本原理", "B": "体现了我们党全心全意为人民服务的根本宗旨", "C": "推动经济社会发展的根本目的", "D": "马克思主义中国化的独创性内容"}, "answer": "ABC", "analysis": ""}];
+const DATI = [{"chapter": "导论", "type": "论", "num": 1, "title": "马克思主义中国化时代化的内涵", "answer": "(1)马克思主义中国化时代化，就是坚持把马克思主义基本原理同中国具体实际相结合、同中华优秀传统文化相结合。\n(2)具体包括三个层次：\n①运用马克思主义的立场、观点和方法。观察时代、把握时代和引领时代，解决中国革命、建设和改革中的实际问题。\n②总结和提炼中国革命、建设和改革的实践经验并上升为理论，不断丰富和发展马克思主义的理论宝库，赋予马克思主义新的时代内涵。\n③运用中国人民喜闻乐见的民族语言来阐述马克思主义，使其根植于中华优秀传统文化的土壤之中，具有中国特色，中国风格，中国气派。", "keywords": ["马克思主义中国化", "中华优秀传统文化", "实践经验", "时代化", "基本原理", "实际", "相结合", "运用", "立场", "观点", "方法", "观察", "把握", "引领", "革命", "改革"]}, {"chapter": "导论", "type": "论", "num": 2, "title": "马克思主义中国化时代化理论成果及其关系", "answer": "(1)成果：毛泽东思想，邓小平理论，“三个代表”重要思想，科学发展观，习近平新时代中国特色社会主义思想。\n(2)关系：马克思主义中国化时代化的理论成果是一脉相承又与时俱进的关系。\n①一方面，毛泽东思想所蕴含的马克思主义的立场、观点和方法，为中国特色社会主义理论体系提供了基本遵循。\n②另一方面，中国特色社会主义理论体系在新的历史条件下进一步丰富和发展了毛泽东思想。\n③毛泽东思想和新时代中国特色社会主义理论体系，都是马克思列宁主义在中国的运用和发展，都是党和国家必须长期坚持的指导思想。", "keywords": ["三个代表", "科学发展观", "毛泽东思想", "邓小平理论", "马克思主义中国化", "与时俱进", "中国特色社会主义", "成果", "习近平", "时代", "关系", "蕴含", "立场", "观点", "方法", "理论体系"]}, {"chapter": "第一章：毛泽东思想及其历史地位", "type": "", "num": 1, "title": "毛泽东思想的主要内容", "answer": "(1)新民主主义革命理论\n(2)社会主义革命和社会主义建设理论\n(3)革命军队建设和军事战略的理论\n(4)政策和策略的理论\n(5)思想政治工作和文化工作的理论\n(6)党的建设理论\n(7)国际战略和外交工作的理论", "keywords": ["党的建设", "新民主主义革命", "新民主主义", "军事战略", "思想政治工作", "国际战略", "理论", "社会主义", "军队", "政策", "策略", "文化", "外交"]}, {"chapter": "第一章：毛泽东思想及其历史地位", "type": "材", "num": 2, "title": "毛泽东思想活的灵魂", "answer": "(1)实事求是：\n①是毛泽东思想的基本点，是毛泽东思想的精髓。实事求是，就是一切从实际出发，理论联系实际，坚持在实践中检验真理和发展真理。\n②要深入实际了解事物的本来样貌，正确认识把握我国国情，不断推进实践基础上的理论创新\n(2)群众路线：\n①就是一切为了群众，一切依靠群众，从群众中来，到群众中去\n②要坚持人民是推动历史发展的根本力量，坚持全心全意为人民服务，保持党同人民群众的血肉联系\n(3)独立自主：\n①就是坚持独立思考，走自己的道路\n②就要坚持中国的事情必须由中国人民自己作主张，处理；坚持独立自主的和平外交政策，走和平发展道路。", "keywords": ["实事求是", "群众路线", "独立自主", "毛泽东思想", "基本点", "精髓", "实际", "出发", "理论", "在实践中", "检验", "真理", "了解", "事物", "样貌", "把握"]}, {"chapter": "第一章：毛泽东思想及其历史地位", "type": "简", "num": 3, "title": "毛泽东思想的历史地位", "answer": "(1)是马克思中国化时代化的第一个重大理论成果：确定马克思主义中国化时代化的前进方向\n(2)是中国革命和建设的科学指南：在其指导下完成反对帝国主义，封建主义，官僚资本主义的任务\n(3)是中国共产党和中国人民宝贵的精神财富：实事求是，群众路线，独立自主思想将长期指导我们前进", "keywords": ["实事求是", "群众路线", "独立自主", "帝国主义", "封建主义", "马克思主义中国化", "科学指南", "时代化", "理论", "成果", "确定", "前进", "方向", "革命", "指导", "任务"]}, {"chapter": "第二章：新民主主义革命理论", "type": "简", "num": 1, "title": "新民主主义革命的总路线", "answer": "(1)内容：无产阶级领导的，人民大众的，反对帝国主义、封建主义和官僚资本主义的革命\n(2)指明了中国革命的对象、动力、领导力量、性质和前途：\n①对象：帝国主义、封建主义、官僚资本主义\n②动力：无产阶级、农民阶级、城市小资产阶级、民族资产阶级\n③领导力量：无产阶级（无产阶级领导权是中国革命的中心问题）\n④性质：资产阶级民主主义革命\n⑤前途：是社会主义而不是资本主义", "keywords": ["无产阶级", "资产阶级", "民族资产阶级", "小资产阶级", "农民阶级", "官僚资本主义", "帝国主义", "封建主义", "领导权", "内容", "人民大众", "革命", "指明", "中国", "对象", "动力"]}, {"chapter": "第二章：新民主主义革命理论", "type": "", "num": 2, "title": "新民主主义的基本纲领", "answer": "(1)政治纲领：推翻帝国主义和封建主义统治，建立一个由无产阶级领导的，以工农联盟为基础，各革命阶级联合专政的新民主主义的共和国。\n(2)经济纲领：没收封建地主阶级的土地归农民所有，没收官僚资产阶级的垄断资本归新民主主义的国家所有，保护民族工商业。\n(3)文化纲领：新民主主义文化是无产阶级领导的，人民大众的，反帝反封建的文化，是民族的、科学的、大众的文化。", "keywords": ["无产阶级", "资产阶级", "帝国主义", "封建主义", "新民主主义", "工农联盟", "政治纲领", "经济纲领", "文化纲领", "反帝反封建", "推翻", "统治", "建立", "领导", "基础", "革命"]}, {"chapter": "第二章：新民主主义革命理论", "type": "", "num": 3, "title": "新民主主义革命的道路", "answer": "(1)内容：农村包围城市，武装夺取政权的革命道路。\n(2)道路形成的必然性：由中国所处的时代特点和具体国情决定\n(3)走该道路，根本在于弄清土地革命、武装斗争和农村革命根据地建设三者之间的关系。", "keywords": ["武装斗争", "农村包围城市", "武装夺取政权", "土地革命", "革命根据地", "内容", "革命道路", "中国", "时代特点", "国情", "决定", "关系"]}, {"chapter": "第二章：新民主主义革命理论", "type": "材", "num": 4, "title": "新民主主义革命的经验：三大法宝", "answer": "(1)三大法宝：统一战线：要建立巩固的工农联盟，要正确对待资产阶级武装斗争：要坚持党对军队的绝对领导。党的建设：要不断加强党的思想，组织，作风建设\n(2)关系：统一战线和武装斗争是中国革命的两个基本特点，是战胜敌人的两个基本武器，党的组织则是这两个基本武器以实行对敌冲锋陷阵的战士。", "keywords": ["统一战线", "武装斗争", "党的建设", "三大法宝", "资产阶级", "工农联盟", "建立", "巩固", "正确对待", "军队", "领导", "不断加强", "思想", "组织", "作风", "关系"]}, {"chapter": "第二章：新民主主义革命理论", "type": "", "num": 5, "title": "新民主主义革命理论的意义", "answer": "(1)理论上：揭示了近代中国革命发展的客观规律，解决了中国革命的一系列理论问题，丰富了马克思主义的理论宝库。\n(2)实践上：指导我们取得革命的成功，把马克思主义基本原理同中国革命具体实际相结合，开辟马克思主义中国化时代化的道路。\n(3)世界上：极大改变了世界政治格局，鼓舞全世界。", "keywords": ["马克思主义中国化", "客观规律", "理论", "揭示", "革命", "问题", "宝库", "实践", "指导", "基本原理", "实际", "相结合", "开辟", "时代化", "道路", "世界"]}, {"chapter": "第三章：社会主义改造理论", "type": "", "num": 1, "title": "适合中国特点的社会主义改造道路", "answer": "(1)农业、手工业的社会主义改造。农业：\n①积极引导农民组织起来，走互助合作道路；\n②遵循自愿互利、典型示范和国家帮助的原则，以互助合作的优越性吸引农民走互助合作道路；\n③正确分析农村的阶级和阶层状况，制定正确的阶级政策；\n④坚持积极领导，稳步前进的方针，采取循序渐进的步骤。手工业：（经历了由小到大，由低级到高级的三个步骤）\n①第一步是办手工业供销小组；\n②第二步是办手工业供销合作社；\n③第三步是建立手工业生产合作社。\n(2)资本主义工商业的社会主义改造。\n①用和平赎买的方法改造资本主义工商业；\n②采取从低级到高级的国家资本主义的过渡形式；\n③把资本主义工商业者改造成为自食其力的社会主义劳动者。步骤：\n①第一步主要实行初级形式的国家资本主义；\n②第二步主要实行个别企业的公私合营；\n③第三步是实行全行业的公私合营。", "keywords": ["社会主义改造", "公私合营", "和平赎买", "国家资本主义", "农业", "手工业", "引导", "农民", "组织", "起来", "互助合作", "道路", "遵循", "典型示范", "帮助", "原则"]}, {"chapter": "第三章：社会主义改造理论", "type": "", "num": 2, "title": "社会主义改造的历史经验", "answer": "(1)坚持社会主义工业化建设与社会主义改造同时并举；\n(2)采取积极引导，逐步过渡的方式；\n(3)用和平方法进行改造。", "keywords": ["社会主义改造", "社会主义工业化", "同时并举", "采取", "引导", "过渡", "方式", "和平", "方法"]}, {"chapter": "第四章：社会主义建设道路初步探索的理论成果", "type": "", "num": 1, "title": "初步探索的重要理论成果", "answer": "(1)调动一切积极因素为社会主义事业服务；\n(2)正确认识和处理社会主义社会矛盾的思想；\n(3)走中国工业化道路的思想；\n(4)其他一些理论成果：关于社会主义发展阶段的思想，“四个现代化”战略目标，科教文化，国防建设，祖国统一，外交工作等。", "keywords": ["调动", "积极因素", "社会主义", "事业", "服务", "处理", "思想", "中国", "工业化", "道路", "理论", "成果", "阶段", "现代化", "战略目标", "科教"]}, {"chapter": "第四章：社会主义建设道路初步探索的理论成果", "type": "", "num": 2, "title": "走中国工业化道路的思想", "answer": "(1)实现工业化是中国近代以来历史发展的必然要求，也是民族独立和国家富强的必要条件；\n(2)毛泽东提出了，以农业为基础，以工业为主导，以农轻重为序发展国民经济的总方针，以及一整套“两条腿走路”的工业化发展思路（即重工业与轻工业同时并举，中央企业和地方企业同时并举，沿海工业和内地工业同时并举，大型企业和中小型企业同时并举）；\n(3)走中国工业化道路的具体举措：\n①必须采取正确的经济建设方针；\n②必须调整和完善所有制结构；\n③必须积极探索适合我国情况的经济体制和运行机制；\n④必须发展科学技术和文化教育。\n(4)走中国工业化道路的思想是探索出走中国式现代道路的思想的开端。", "keywords": ["民族独立", "工业化", "中国", "历史", "国家", "富强", "毛泽东", "农业", "基础", "国民经济", "总方针", "思路", "重工业", "轻工业", "同时并举", "中央"]}, {"chapter": "第四章：社会主义建设道路初步探索的理论成果", "type": "", "num": 3, "title": "初步探索的意义", "answer": "(1)巩固和发展了社会主义制度；\n(2)为开创中国特色社会主义提供了宝贵经验、理论基础、物质基础；\n(3)丰富科学社会主义的理论和实践。", "keywords": ["中国特色社会主义", "巩固", "制度", "开创", "宝贵", "经验", "理论", "基础", "科学", "实践"]}, {"chapter": "第四章：社会主义建设道路初步探索的理论成果", "type": "", "num": 4, "title": "初步探索的经验教训", "answer": "(1)必须把马克思主义同中国实际相结合，探索出符合中国特点的社会主义建设道路；\n(2)必须正确认识社会主义社会的主要矛盾和根本任务；\n(3)必须从实际出发进行社会主义建设；\n(4)必须发展社会主义民主，完善社会主义法制；\n(5)必须坚持党的民主集中制和集体领导制度；\n(6)必须坚持对外开放，借鉴和吸收人类文明成果建设社会主义，不能关起门来搞建设；总结：社会主义建设道路初步探索的正反两方面经验，为今天坚持和发展中共特色社会主义提供了重要借鉴。", "keywords": ["民主集中制", "马克思主义", "中国", "实际", "相结合", "探索", "特点", "社会主义", "道路", "根本任务", "出发", "完善", "法制", "集体领导", "制度", "借鉴"]}, {"chapter": "第四章：社会主义建设道路初步探索的理论成果", "type": "", "num": 5, "title": "两个历史时期的关系：", "answer": "习近平强调：“我们党领导人民进行社会主义建设，有改革开放前和改革开放后两个历史时期，这是两个相互联系又有重大区别的时期，但本质上都是我们党领导人民进行社会主义建设的实践探索。中国特色社会主义是在改革开放历史新时期开创的，但也是在新中国已经建立起社会主义基本制度、并进行了20多年建设的基础上开创的。”", "keywords": ["改革开放", "中国特色社会主义", "习近平", "强调", "领导", "人民", "历史", "时期", "联系", "区别", "本质", "实践", "探索", "开创", "建立", "基本"]}, {"chapter": "第五章：中国特色社会主义理论体系形成发展过程", "type": "", "num": 1, "title": "中国特色社会主义理论体系形成发展过程（看书）", "answer": "(1)中国特色社会主义理论体系的形成:邓小平理论：什么是社会主义、怎样建设社会主义。\n(2)中国特色社会主义理论体系的跨世纪发展：“三个代表”重要思想：建设什么样的党、怎样建设党。\n(3)中国特色社会主义理论体系在新世纪新阶段的新发展科学发展观：实现什么样的发展、怎样发展\n(4)中国特色社会主义理论体系在新时代的新篇章习近平新时代中国特色社会主义思想：新时代坚持和发展什么样的社会主义，怎样坚持和发展社会主义；建设什么样的社会主义现代化强国，怎样建设社会主义现代化强国；建设什么样的长期执政的马克思主义政党，怎样建设长期执政的马克思主义政党。", "keywords": ["三个代表", "科学发展观", "邓小平理论", "习近平新时代中国特色社会主义思想", "中国特色社会主义", "理论体系", "跨世纪", "新世纪", "阶段", "新篇章", "现代化", "强国", "执政", "马克思主义", "政党"]}, {"chapter": "第五章：中国特色社会主义理论体系形成发展过程", "type": "", "num": 2, "title": "马克思主义中国化时代化的成果：毛泽东思想，邓小平理论，“三个代表”重要思想，", "answer": "科学发展观，习近平新时代中国特色社会主义思想。", "keywords": ["科学发展观", "习近平新时代中国特色社会主义思想", "中国特色社会主义"]}, {"chapter": "第五章：中国特色社会主义理论体系形成发展过程", "type": "", "num": 3, "title": "中国特色社会主义理论体系：删去上方的“毛泽东思想”。", "answer": "", "keywords": []}, {"chapter": "第六章：邓小平理论", "type": "", "num": 1, "title": "邓小平理论首要的基本的理论问题", "answer": "(1)什么是社会主义，建设什么样的社会主义，怎样建设社会主义\n(2)(简)社会主义的本质：就是解放生产力，发展生产力，消灭剥削，消除两极分化，最终达到富裕。", "keywords": ["解放生产力", "发展生产力", "社会主义", "本质", "消灭", "剥削", "消除", "两极分化"]}, {"chapter": "第六章：邓小平理论", "type": "", "num": 2, "title": "邓小平理论的精髓", "answer": "(1)精髓：解放思想，实事求是\n(2)展开：解放思想，实事求是贯穿邓小平理论形成发展的全过程，具有辩证统一关系，只有解放思想才能达到实事求是，只有实事求是才是真正的思想解放。", "keywords": ["实事求是", "邓小平理论", "精髓", "解放思想", "展开", "贯穿", "全过程", "关系", "才能"]}, {"chapter": "第六章：邓小平理论", "type": "", "num": 3, "title": "邓小平理论的主要内容", "answer": "(1)社会主义初级阶段理论和党的基本路线党在社会主义初级阶段的基本路线：领导和团结全国各族人民，以经济建设为中心，坚持四项基本原则，坚持改革开放，自力更生，艰苦奋斗，为把我国建设成为富强民主文明的社会主义现代化国家而奋斗\n(2)社会主义的根本任务和发展战略理论\n①根本任务：发展生产力。发展生产力离不开科学技术，科学技术是第一生产力。\n②“三步走”发展战略：第一步：1990年，实现国民生产总值比1980年翻一番，解决人民的温饱问题；第二步：到20世纪末，使国民生产总值再增长一倍，人民生活达到小康水平；第三步：到21世纪中叶，人均国民生产总值达到中等发达国家水平，人民生活比较富裕，基本实现现代化，然后在这个基础上继续前进。\n③为了更好地实现“三步走”的现代化发展战略，邓小平提出了以重点带动全局的思想。A.提出三个战略重点：一是农业，二是能源和交通，三是教育和科学。B.“台阶式”渐进式发展；C.“先富带动后富”逐步实现共同富裕；D.“两个大局”相互服从的思想。\n(3)社会主义改革开放和社会主义市场经济理论\n①社会主义改革开放理论：1’改革是中国的第二次革命，是实现中国现代化的必由之路；2’是社会发展的直接动力；3’开放也是改革，对外开放是基本国策。\n②社会主义市场经济理论内涵：1’计划经济和市场经济不是划分社会制度的标志；2’计划和市场都是经济手段，各有优劣，要把两者优势结合起来；3’市场经济作为资源配置手段本身不具有制度属性，可与社会主义制度结合。\n(4)“两手抓，两手都要硬”\n①首先，强调我们要建设的社会主义国家，不但要有高度的物质文明，而且要有高度的精神文明。\n②其次，强调物质文明建设和精神文明建设相辅相成、相互促进。\n③最后，强调精神文明重在建设。\n(5)“一国两制”和祖国统一\n(6)中国特色社会主义外交和国际战略\n(7)党的建设理论", "keywords": ["党的建设", "社会主义初级阶段", "改革开放", "发展生产力", "共同富裕", "计划经济", "市场经济", "一国两制", "中国特色社会主义", "国际战略", "理论", "路线", "领导", "全国", "中心", "基本"]}, {"chapter": "第六章：邓小平理论", "type": "简", "num": 4, "title": "邓小平理论的历史地位：", "answer": "(1)是马克思列宁主义，毛泽东思想的继承发展\n(2)是中国特色社会主义理论体系的开篇之作\n(3)是改革开放和社会主义现代化建设的科学指南", "keywords": ["改革开放", "毛泽东思想", "中国特色社会主义", "科学指南", "马克思列宁主义", "继承", "理论体系", "开篇", "现代化"]}, {"chapter": "第七章：“三个代表”重要思想", "type": "", "num": 1, "title": "三个代表重要思想的主要内容", "answer": "(1)发展是党执政兴国的第一要务重要性：\n①中国特色社会主义是靠发展来不断巩固和推进的。\n②发展是国际竞争中赢得主动的需要。\n③用发展的办法解决前进中的问题，是改革开放以来我们的一条重要经验。\n④发展是硬道理，中国解决所有问题的关键在于依靠自己的发展。具体内容：\n①发展要善于抓住机遇，珍惜机遇，用好机遇。\n②发展是社会主义物质文明、政治文明和精神文明的协调发展。\n③发展包括促进人的全面发展。\n④要正确认识和处理改革、发展、稳定的关系。\n(2)建立社会主义市场经济体制\n(3)全面建设小康社会；\n(4)建设社会主义政治文明；\n(5)实施“引进来”和“走出去”相结合的对外开放战略对外开放是一项长期的基本国策。进入20世纪90年代，适应经济球化趋势的发展和加入世界贸易组织的新形势，我国以更加积极的姿态走向世界，坚持“引进来”和“走出去”相结合，全面提高对外开放水平，在更大范围、更广领域和更高层次上参与国际经济技术合作和竞争，充分利用国际国内两个市场、两种资源，以开放促改革促发展。\n(6)推进党的建设新的伟大工程。", "keywords": ["党的建设", "改革开放", "市场经济", "中国特色社会主义", "党执政", "兴国", "要务", "重要性", "巩固", "赢得", "需要", "办法", "前进", "问题", "经验", "硬道理"]}, {"chapter": "第七章：“三个代表”重要思想", "type": "", "num": 2, "title": "“三个代表”重要思想的核心观点", "answer": "(1)党必须始终代表中国先进生产力的发展要求\n(2)始终代表中国先进文化的发展方向\n(3)始终代表中国最广大人民的根本利益1-1 党必须始终代表中国先进生产力的发展要求（无人提及）\n(1)是什么：党的理论、路线、纲领、方针、政策和各项工作，必须努力符合生产力发展的规律，体现不断推动社会生产力解放和发展的要求\n(2)为什么：\n①因为社会主义的根本任务是发展生产力，马克思主义执政党必须高度重视解放和发展生产力；\n②社会主义现代化必须建立在发达生产力基础之上\n(3)怎么做：\n①人是生产力中最活跃的因素，要开发人力资源\n②科学技术是第一生产力，科技进步创新是发展生产力的决定因素，要加强科技创新。1-2 始终代表中国先进文化的发展方向（无人提及）\n(1)是什么：党的理论，路线，纲领，方针，政策和各项工作，必须努力体现发展面向现代化，面向世界，面向未来的，民族的科学的大众的社会主义文化的要求。\n(2)为什么：\n①发展先进文化，是实现社会主义现代化的战略任务\n②发展先进文化，就是发展中国特色社会主义的文化\n③发展先进文化，就是发展面向现代化，面向世界，面向未来的，民族的科学的大众的社会主义文化\n(3) 怎么做：\n①把弘扬主旋律和提倡多样化统一起来\n②弘扬民族精神\n③加强社会主义思想道德建设\n④做好思想政治工作", "keywords": ["发展生产力", "中国特色社会主义", "思想政治工作", "代表", "文化", "方向", "人民", "根本利益", "无人", "提及", "理论", "路线", "纲领", "方针", "政策", "符合"]}, {"chapter": "第八章：科学发展观", "type": "", "num": 1, "title": "科学发展观的内涵", "answer": "(1)推动经济社会发展是科学发展观的第一要义；\n(2)以人为本是科学发展观的核心立场；以人为本是科学发展观的核心立场，集中体现了马克思主义的基本原理，体现了我们党全心全意为人民服务的根本宗旨和推动经济社会发展的根本目的，是社会主义的本质特征。以人为本，继承了中国古代的民本思想，但又与它存在着实质上的区别。以人为本也不同于西方的人本主义。以人为本，坚持了历史唯物主义的基本立场和基本观点，坚持把人民的利益放在首位，体现了人民当家作主的历史地位，体现了我们党立党为公、执政为民的执政理念。而中国古代的民本思想和西方的人本主义，则站在唯心史观的立场上。这是它们的根本区别。具体举措：\n①坚持以人为本，就要坚持发展为了人民\n②坚持以人为本，就要坚持发展依靠人民\n③坚持以人为本，就要坚持发展成果由人民共享\n(3)全面协调可持续是科学发展观的基本要求；\n(4)统筹兼顾是科学发展观的根本方法。", "keywords": ["科学发展观", "以人为本", "全面协调可持续", "统筹兼顾", "推动", "经济社会", "要义", "核心", "立场", "马克思主义", "基本原理", "体现", "全心全意", "人民", "服务", "根本宗旨"]}];
 
-/* ---------- persistence ---------- */
+/* ========== persistence ========== */
 const LS_KEY = 'maogai_quiz_v2';
 let store = load();
 function load(){ try{return JSON.parse(localStorage.getItem(LS_KEY))||{}}catch(e){return {}} }
 function save(){ localStorage.setItem(LS_KEY, JSON.stringify(store)); }
-function defState(){ return {stats:{}, master:2, round:1}; }
-if(!store.stats) store = Object.assign(defState(), store);
+function defState(){ return {stats:{}, datiStats:{}, master:2, round:1, datiRound:1}; }
+store = Object.assign(defState(), store);
+if(!store.stats) store.stats={}; if(!store.datiStats) store.datiStats={};
 
 QUESTIONS.forEach((q,i)=> q.id = q.chapter+'#'+q.type+'#'+q.num+'#'+i);
+DATI.forEach((d,i)=> d.id = d.chapter+'#dati#'+d.num+'#'+i);
 
-/* ---------- chapter chips ---------- */
+/* ========== mode switch ========== */
+function switchMode(m){
+  document.getElementById('segChoice').classList.toggle('on', m==='choice');
+  document.getElementById('segDati').classList.toggle('on', m==='dati');
+  document.getElementById('choiceSetup').classList.toggle('hide', m!=='choice');
+  document.getElementById('datiSetup').classList.toggle('hide', m!=='dati');
+  if(m==='dati'){ renderDChips(); dRefresh(); } else { renderChips(); refreshResume(); }
+}
+
+/* ================================================================== */
+/* ============================ CHOICE ============================== */
+/* ================================================================== */
 const chapters = [...new Set(QUESTIONS.map(q=>q.chapter))];
 let selChaps = new Set(store.selChaps || chapters);
-function shortCh(ch){ return ch; }
 function renderChips(){
   const box=document.getElementById('chapChips'); box.innerHTML='';
   chapters.forEach(ch=>{
     const n=QUESTIONS.filter(q=>q.chapter===ch).length;
     const el=document.createElement('div');
     el.className='chip'+(selChaps.has(ch)?' on':'');
-    el.innerHTML = shortCh(ch)+' <span class="mini">'+n+'</span>';
+    el.innerHTML = ch+' <span class="mini">'+n+'</span>';
     el.onclick=()=>{ selChaps.has(ch)?selChaps.delete(ch):selChaps.add(ch); store.selChaps=[...selChaps]; save(); renderChips(); refreshResume(); };
     box.appendChild(el);
   });
 }
 function selAll(v){ selChaps = v? new Set(chapters): new Set(); store.selChaps=[...selChaps]; save(); renderChips(); refreshResume(); }
-
-/* ---------- stats / wrong-set helpers ---------- */
 function st(id){ return store.stats[id] || (store.stats[id]={seen:0,wrong:0,right:0,streak:0,mastered:false,wrongFlag:false,marked:false}); }
-function inSet(q){ const s=st(q.id); return s.wrongFlag || s.marked; }       // 错题集成员判定
+function inSet(q){ const s=st(q.id); return s.wrongFlag || s.marked; }
 function activePool(){ return QUESTIONS.filter(q=>selChaps.has(q.chapter) && !st(q.id).mastered); }
 function wrongPool(){ return QUESTIONS.filter(q=>inSet(q)); }
 function priority(q){ const s=st(q.id); return s.wrong*3 - s.streak; }
-
 function refreshResume(){
   const total=QUESTIONS.filter(q=>selChaps.has(q.chapter)).length;
   const mastered=QUESTIONS.filter(q=>selChaps.has(q.chapter)&&st(q.id).mastered).length;
@@ -271,14 +416,14 @@ function refreshResume(){
     `<span>已选 <b>${total}</b> 题</span><span>已掌握 <b>${mastered}</b></span><span>当前第 <b>${store.round}</b> 轮</span>`;
   const w=wrongPool().length, mk=QUESTIONS.filter(q=>st(q.id).marked).length, wr=QUESTIONS.filter(q=>st(q.id).wrongFlag).length;
   document.getElementById('wrongStat').innerHTML =
-    `共 <b style="color:var(--gold)">${w}</b> 题（答错 ${wr} 题 · 手动收藏 ${mk} 题）。刷到“掌握”自动移出，收藏题需手动移出。`;
+    `共 <b style="color:var(--gold)">${w}</b> 题（答错 ${wr} · 收藏 ${mk}）。刷到“掌握”自动移出，收藏题需手动移出。`;
 }
 document.getElementById('masterN').textContent = '连续答对 '+store.master+' 次';
 
-/* ---------- session state ---------- */
 let sessionMode='all';
 let queue=[], answers=[], orders=[], pos=0, current=null;
 let roundSeen=0, roundRight=0, shuffleQ=true, shuffleO=true;
+let picked=new Set(), optOrder=[], optDisp={};
 
 function startSession(mode){
   sessionMode=mode;
@@ -286,40 +431,28 @@ function startSession(mode){
   shuffleQ=document.querySelector('#optShuffleQ input').checked;
   shuffleO=document.querySelector('#optShuffleO input').checked;
   buildRound();
-  if(queue.length===0){
-    alert(mode==='wrong' ? '错题集是空的。先去章节练习，答错或手动收藏的题会进来。' : '该范围已全部掌握！可“清空全部进度”重练。');
-    return;
-  }
-  show('quiz'); document.getElementById('footer').classList.remove('hide');
-  renderQ();
+  if(queue.length===0){ alert(mode==='wrong' ? '错题集是空的。先去章节练习，答错或收藏的题会进来。' : '该范围已全部掌握！可“清空全部进度”重练。'); return; }
+  show('quiz'); document.getElementById('footer').classList.remove('hide'); renderQ();
 }
 function buildRound(){
   let pool = sessionMode==='wrong' ? wrongPool() : activePool();
   pool.sort((a,b)=> priority(b)-priority(a));
   if(shuffleQ){
-    const focus=pool.filter(q=>st(q.id).wrong>0);
-    const rest =pool.filter(q=>st(q.id).wrong===0);
+    const focus=pool.filter(q=>st(q.id).wrong>0), rest=pool.filter(q=>st(q.id).wrong===0);
     shuffle(rest); queue=[...focus, ...rest];
   } else queue=pool;
   answers=new Array(queue.length).fill(null);
   orders=new Array(queue.length).fill(null);
   pos=0; roundSeen=0; roundRight=0;
 }
-
-/* ---------- render a question ---------- */
-let picked=new Set(), optOrder=[], optDisp={};
 function renderQ(){
   current=queue[pos];
   if(!current){ finishRound(); return; }
   if(!orders[pos]){ let o=Object.keys(current.options); if(shuffleO) shuffle(o); orders[pos]=o; }
   optOrder=orders[pos]; optDisp={}; optOrder.forEach((k,i)=>optDisp[k]=String.fromCharCode(65+i));
-  const s=st(current.id);
-  const done=answers[pos];
+  const s=st(current.id), done=answers[pos];
   picked = done? new Set(done.picked): new Set();
-
-  // header bar
-  document.getElementById('modeLabel').innerHTML = sessionMode==='wrong'
-    ? '<b style="color:var(--gold)">错题集练习</b>' : '第 <b>'+store.round+'</b> 轮';
+  document.getElementById('modeLabel').innerHTML = sessionMode==='wrong' ? '<b style="color:var(--gold)">错题集练习</b>' : '第 <b>'+store.round+'</b> 轮';
   document.getElementById('roundPos').textContent=pos+1;
   document.getElementById('roundLen').textContent=queue.length;
   document.getElementById('poolWrap').style.display = sessionMode==='wrong'?'none':'';
@@ -328,42 +461,26 @@ function renderQ(){
   const ta=Object.values(store.stats).reduce((a,x)=>a+x.right+x.wrong,0);
   const tr=Object.values(store.stats).reduce((a,x)=>a+x.right,0);
   document.getElementById('acc').textContent= ta? Math.round(tr/ta*100)+'%':'0%';
-
-  // meta + mark button
   document.getElementById('qmeta').innerHTML =
-    `<span class="tag ${current.type}">${current.type==='single'?'单选':'多选'}</span>`+
-    `<span>${shortCh(current.chapter)}</span>`+
-    (s.wrong>0?`<span class="tag focus">错过${s.wrong}次</span>`:'')+
-    (s.marked?`<span class="tag mark">已收藏</span>`:'')+
+    `<span class="tag ${current.type}">${current.type==='single'?'单选':'多选'}</span><span>${current.chapter}</span>`+
+    (s.wrong>0?`<span class="tag focus">错过${s.wrong}次</span>`:'')+(s.marked?`<span class="tag mark">已收藏</span>`:'')+
     `<button class="markbtn ${inSet(current)?'on':''}" onclick="toggleMark()">${inSet(current)?'在错题集 ✓':'加入错题集'}</button>`;
   document.getElementById('stem').textContent = current.num+'. '+current.stem;
-
-  // options
   const box=document.getElementById('opts'); box.innerHTML='';
   optOrder.forEach((k,idx)=>{
     const el=document.createElement('div'); el.className='opt'; el.dataset.k=k;
     el.innerHTML=`<span class="k">${String.fromCharCode(65+idx)}</span><span>${current.options[k]}</span>`;
-    if(done){
-      el.classList.add('dis');
-      if(current.answer.includes(k)) el.classList.add('ok');
-      else if(done.picked.includes(k)) el.classList.add('bad');
-    } else {
-      if(picked.has(k)) el.classList.add('sel');
-      el.onclick=()=>pick(k,el);
-    }
+    if(done){ el.classList.add('dis'); if(current.answer.includes(k)) el.classList.add('ok'); else if(done.picked.includes(k)) el.classList.add('bad'); }
+    else { if(picked.has(k)) el.classList.add('sel'); el.onclick=()=>pick(k,el); }
     box.appendChild(el);
   });
-
-  // feedback (if answered)
   const f=document.getElementById('feed');
   if(done){
     const dispAns=current.answer.split('').map(k=>optDisp[k]).sort().join('');
     const dispMine=done.picked.map(k=>optDisp[k]).sort().join('');
     f.className='feed '+(done.ok?'ok':'bad');
-    f.innerHTML=`<div class="ans">${done.ok?'✓ 答对了':'✗ 答错了'} 　正确答案：${dispAns}　你选：${dispMine||'—'}</div>`+
-      (current.analysis?`<div class="ana">解析：${current.analysis}</div>`:'');
+    f.innerHTML=`<div class="ans">${done.ok?'✓ 答对了':'✗ 答错了'} 　正确答案：${dispAns}　你选：${dispMine||'—'}</div>`+(current.analysis?`<div class="ana">解析：${current.analysis}</div>`:'');
   } else { f.innerHTML=''; f.className=''; }
-
   updateFooter();
 }
 function updateFooter(){
@@ -372,132 +489,239 @@ function updateFooter(){
   const ab=document.getElementById('actBtn');
   if(!done){ ab.textContent='提交'; ab.disabled = picked.size===0; }
   else { ab.disabled=false; ab.textContent = last? '结束本轮' : '下一题'; }
-  document.getElementById('footer').querySelector('.foot, .wrap'); // noop
 }
 function pick(k,el){
   if(answers[pos]) return;
-  if(current.type==='single'){ picked=new Set([k]); document.querySelectorAll('.opt').forEach(o=>o.classList.remove('sel')); el.classList.add('sel'); }
+  if(current.type==='single'){ picked=new Set([k]); document.querySelectorAll('#opts .opt').forEach(o=>o.classList.remove('sel')); el.classList.add('sel'); }
   else { picked.has(k)?(picked.delete(k),el.classList.remove('sel')):(picked.add(k),el.classList.add('sel')); }
   updateFooter();
 }
-function onAction(){
-  if(!answers[pos]) submit();
-  else if(pos>=queue.length-1) finishRound();
-  else goNext();
-}
+function onAction(){ if(!answers[pos]) submit(); else if(pos>=queue.length-1) finishRound(); else goNext(); }
 function submit(){
   if(picked.size===0) return;
-  const correct=current.answer.split('').sort().join('');
-  const mine=[...picked].sort().join('');
-  const ok=mine===correct;
-  const s=st(current.id); s.seen++;
+  const correct=current.answer.split('').sort().join(''), mine=[...picked].sort().join('');
+  const ok=mine===correct, s=st(current.id); s.seen++;
   if(ok){ s.right++; s.streak++; roundRight++; if(s.streak>=store.master){ s.mastered=true; s.wrongFlag=false; } }
   else { s.wrong++; s.streak=0; s.mastered=false; s.wrongFlag=true; }
-  roundSeen++;
-  answers[pos]={picked:[...picked], ok};
-  save();
-  renderQ();
+  roundSeen++; answers[pos]={picked:[...picked], ok}; save(); renderQ();
 }
-function toggleMark(){
-  const s=st(current.id);
-  if(inSet(current)){ s.marked=false; s.wrongFlag=false; }   // 移出错题集
-  else { s.marked=true; }                                     // 加入错题集
-  save(); renderQ();
-}
+function toggleMark(){ const s=st(current.id); if(inSet(current)){ s.marked=false; s.wrongFlag=false; } else s.marked=true; save(); renderQ(); }
 function goPrev(){ if(pos>0){ pos--; renderQ(); } }
 function goNext(){ if(pos<queue.length-1){ pos++; renderQ(); } else finishRound(); }
-
-/* ---------- answer card ---------- */
 function openCard(){
   const g=document.getElementById('cardGrid'); g.innerHTML='';
   queue.forEach((q,i)=>{
     const a=answers[i]; const el=document.createElement('div');
     el.className='cell'+(a?(a.ok?' ok':' bad'):'')+(i===pos?' cur':'');
-    el.textContent=i+1;
-    if(inSet(q)) el.innerHTML+='<span class="dot"></span>';
-    el.onclick=()=>{ closeCard(); pos=i; renderQ(); };
-    g.appendChild(el);
+    el.textContent=i+1; if(inSet(q)) el.innerHTML+='<span class="dot"></span>';
+    el.onclick=()=>{ closeCard(); pos=i; renderQ(); }; g.appendChild(el);
   });
   document.getElementById('cardMask').classList.remove('hide');
 }
 function closeCard(){ document.getElementById('cardMask').classList.add('hide'); }
-
-/* ---------- finish round ---------- */
 function finishRound(){
-  closeCard();
-  document.getElementById('prog').style.width='100%';
-  show('roundDone'); document.getElementById('footer').classList.add('hide');
-  const ansd=answers.filter(Boolean).length;
+  closeCard(); document.getElementById('prog').style.width='100%';
+  show('roundDone'); document.getElementById('footer').classList.add('hide'); rdContext='choice';
   const accR= roundSeen? Math.round(roundRight/roundSeen*100):0;
   if(sessionMode==='wrong'){
     const left=wrongPool().length;
     document.getElementById('rdTitle').textContent = left===0?'错题集已清空！':'错题集练习完成';
-    document.getElementById('rdBody').innerHTML =
-      `本轮作答 <b>${roundSeen}</b> 题，正确 <b>${roundRight}</b>（${accR}%）。`+
-      (left===0?'<br>太棒了，错题集里的题都掌握/移出了。':`<br>错题集还剩 <b style="color:var(--gold)">${left}</b> 题，可再刷一轮。`);
-    document.getElementById('rdNext').textContent='再刷一轮错题集';
-    document.getElementById('rdNext').classList.toggle('hide', left===0);
+    document.getElementById('rdBody').innerHTML = `本轮作答 <b>${roundSeen}</b> 题，正确 <b>${roundRight}</b>（${accR}%）。`+(left===0?'<br>错题都掌握/移出了。':`<br>错题集还剩 <b style="color:var(--gold)">${left}</b> 题。`);
+    document.getElementById('rdNext').textContent='再刷一轮错题集'; document.getElementById('rdNext').classList.toggle('hide', left===0);
   } else {
     const left=activePool().length;
     document.getElementById('rdTitle').textContent = left===0?'全部掌握！':'第 '+store.round+' 轮完成';
-    document.getElementById('rdBody').innerHTML =
-      `本轮作答 <b>${roundSeen}</b> 题，正确 <b>${roundRight}</b>（${accR}%）。`+
-      (left===0?'<br>所选范围全部达到掌握标准，干得漂亮！':`<br>题池还剩 <b style="color:var(--bad)">${left}</b> 题未掌握，下一轮将优先重点提问这些错题。`);
-    document.getElementById('rdNext').textContent='下一轮（重点攻克错题）';
-    document.getElementById('rdNext').classList.toggle('hide', left===0);
+    document.getElementById('rdBody').innerHTML = `本轮作答 <b>${roundSeen}</b> 题，正确 <b>${roundRight}</b>（${accR}%）。`+(left===0?'<br>所选范围全部掌握，漂亮！':`<br>题池还剩 <b style="color:var(--bad)">${left}</b> 题，下一轮优先重点提问。`);
+    document.getElementById('rdNext').textContent='下一轮（重点攻克错题）'; document.getElementById('rdNext').classList.toggle('hide', left===0);
     store.round++; save();
   }
   refreshResume();
 }
-function nextRound(){
-  buildRound();
-  if(queue.length===0){ toSetup(); return; }
-  show('quiz'); document.getElementById('footer').classList.remove('hide'); renderQ();
-}
-
-/* ---------- wrong book ---------- */
+function nextRound(){ buildRound(); if(queue.length===0){ toHome(); return; } show('quiz'); document.getElementById('footer').classList.remove('hide'); renderQ(); }
 function showWrongBook(){ renderWrong(); show('wrongBook'); }
 function renderWrong(){
-  const list=wrongPool().sort((a,b)=>st(b.id).wrong-st(a.id).wrong);
-  const box=document.getElementById('wbBody');
-  if(list.length===0){ box.innerHTML='<div class="sub" style="margin-top:10px">错题集是空的。章节练习里答错的题会自动进来，也可在答题时点“加入错题集”手动收藏重点题。</div>'; return; }
-  box.innerHTML='<div class="mini" style="margin:8px 0">共 '+list.length+' 题</div>'+
-    list.map(q=>{ const s=st(q.id);
-      return `<div class="review-item">
-        <div class="qmeta"><span class="tag ${q.type}">${q.type==='single'?'单选':'多选'}</span>
-        <span>${shortCh(q.chapter)}</span>
-        ${s.wrong>0?`<span class="tag focus">错${s.wrong}次</span>`:''}
-        ${s.marked?'<span class="tag mark">收藏</span>':''}
-        ${s.mastered?'<span class="tag single">已掌握</span>':''}
-        <button class="markbtn" onclick="removeFromSet('${q.id}')" style="margin-left:auto;border-color:var(--bad);color:var(--bad);background:var(--bad-soft)">移出</button></div>
-        <div style="font-weight:600">${q.num}. ${q.stem}</div>
-        <div class="mini" style="margin-top:4px">${Object.entries(q.options).map(([k,v])=>k+'. '+v).join('　')}</div>
-        <div style="color:var(--ok);font-weight:600;margin-top:4px">正确答案：${q.answer}</div>
-        ${q.analysis?`<div class="ana mini">解析：${q.analysis}</div>`:''}
-      </div>`;
-    }).join('');
+  const list=wrongPool().sort((a,b)=>st(b.id).wrong-st(a.id).wrong), box=document.getElementById('wbBody');
+  if(list.length===0){ box.innerHTML='<div class="sub" style="margin-top:10px">错题集是空的。答错的题会自动进来，也可在答题时点“加入错题集”收藏重点题。</div>'; return; }
+  box.innerHTML='<div class="mini" style="margin:8px 0">共 '+list.length+' 题</div>'+list.map(q=>{ const s=st(q.id);
+    return `<div class="review-item"><div class="qmeta"><span class="tag ${q.type}">${q.type==='single'?'单选':'多选'}</span><span>${q.chapter}</span>${s.wrong>0?`<span class="tag focus">错${s.wrong}次</span>`:''}${s.marked?'<span class="tag mark">收藏</span>':''}${s.mastered?'<span class="tag single">已掌握</span>':''}<button class="markbtn" onclick="removeFromSet('${q.id}')" style="margin-left:auto;border-color:var(--bad);color:var(--bad);background:var(--bad-soft)">移出</button></div>
+      <div style="font-weight:600">${q.num}. ${q.stem}</div><div class="mini" style="margin-top:4px">${Object.entries(q.options).map(([k,v])=>k+'. '+v).join('　')}</div>
+      <div style="color:var(--ok);font-weight:600;margin-top:4px">正确答案：${q.answer}</div>${q.analysis?`<div class="ana mini">解析：${q.analysis}</div>`:''}</div>`; }).join('');
 }
 function removeFromSet(id){ const s=st(id); s.marked=false; s.wrongFlag=false; save(); renderWrong(); refreshResume(); }
-function clearWrongSet(){ if(confirm('确定清空整个错题集？（答错记录与手动收藏都会移出）')){ Object.values(store.stats).forEach(s=>{s.marked=false;s.wrongFlag=false;}); save(); renderWrong(); refreshResume(); } }
-
-/* ---------- misc ---------- */
-function show(id){ ['setup','quiz','roundDone','wrongBook'].forEach(x=>document.getElementById(x).classList.add('hide')); document.getElementById(id).classList.remove('hide'); }
-function toSetup(){ closeCard(); document.getElementById('footer').classList.add('hide'); show('setup'); renderChips(); refreshResume(); }
+function clearWrongSet(){ if(confirm('确定清空选择题错题集？')){ Object.values(store.stats).forEach(s=>{s.marked=false;s.wrongFlag=false;}); save(); renderWrong(); refreshResume(); } }
 function cycleMaster(){ store.master = store.master%3+1; document.getElementById('masterN').textContent='连续答对 '+store.master+' 次'; save(); }
-function resetAll(){ if(confirm('确定清空全部刷题进度（错题、收藏、掌握记录、轮次）？')){ const sc=[...selChaps]; store=defState(); store.selChaps=sc; save(); toSetup(); } }
+function resetAll(){ if(confirm('确定清空全部选择题进度？')){ store.stats={}; store.round=1; save(); refreshResume(); } }
+
+/* ================================================================== */
+/* ============================= DATI =============================== */
+/* ================================================================== */
+const dChapters = [...new Set(DATI.map(d=>d.chapter))];
+let dSel = new Set(store.dSel || dChapters);
+function renderDChips(){
+  const box=document.getElementById('dChapChips'); box.innerHTML='';
+  dChapters.forEach(ch=>{
+    const n=DATI.filter(d=>d.chapter===ch).length, el=document.createElement('div');
+    el.className='chip'+(dSel.has(ch)?' on':'');
+    el.innerHTML = ch+' <span class="mini">'+n+'</span>';
+    el.onclick=()=>{ dSel.has(ch)?dSel.delete(ch):dSel.add(ch); store.dSel=[...dSel]; save(); renderDChips(); dRefresh(); };
+    box.appendChild(el);
+  });
+}
+function dSelAll(v){ dSel = v? new Set(dChapters): new Set(); store.dSel=[...dSel]; save(); renderDChips(); dRefresh(); }
+function dst(id){ return store.datiStats[id] || (store.datiStats[id]={seen:0,streak:0,mastered:false,wrongFlag:false,marked:false,last:''}); }
+function dInSet(d){ const s=dst(d.id); return s.wrongFlag || s.marked; }
+function dActivePool(){ return DATI.filter(d=>dSel.has(d.chapter) && !dst(d.id).mastered); }
+function dWrongPool(){ return DATI.filter(d=>dInSet(d)); }
+function dPriority(d){ const s=dst(d.id); return (s.last==='不会'?3:s.last==='模糊'?2:s.seen===0?1:0); }
+function dRefresh(){
+  const total=DATI.filter(d=>dSel.has(d.chapter)).length;
+  const mastered=DATI.filter(d=>dSel.has(d.chapter)&&dst(d.id).mastered).length;
+  document.getElementById('dResumeStat').innerHTML =
+    `<span>已选 <b>${total}</b> 道</span><span>已掌握 <b>${mastered}</b></span><span>当前第 <b>${store.datiRound}</b> 轮</span>`;
+  const w=dWrongPool().length;
+  document.getElementById('dWrongStat').innerHTML = `共 <b style="color:var(--gold)">${w}</b> 道（自评“模糊/不会”或手动收藏）。自评“掌握”累计达标自动移出。`;
+}
+
+let dMode='all', dQueue=[], dState=[], dP=0, dCur=null, dRoundSeen=0, dRoundMaster=0;
+function startDati(mode){
+  dMode=mode;
+  if(mode==='all' && dSel.size===0){ alert('请至少选择一个章节'); return; }
+  dBuildRound();
+  if(dQueue.length===0){ alert(mode==='wrong' ? '大题错题集是空的。先去自测，自评“模糊/不会”或收藏的题会进来。' : '所选范围已全部掌握！'); return; }
+  show('datiQuiz'); document.getElementById('dFooter').classList.remove('hide'); dRender();
+}
+function dBuildRound(){
+  let pool = dMode==='wrong' ? dWrongPool() : dActivePool();
+  pool.sort((a,b)=> dPriority(b)-dPriority(a));
+  const focus=pool.filter(d=>dPriority(d)>=2), rest=pool.filter(d=>dPriority(d)<2);
+  shuffle(rest); dQueue=[...focus, ...rest];
+  dState=new Array(dQueue.length).fill(null);
+  dP=0; dRoundSeen=0; dRoundMaster=0;
+}
+function dRender(){
+  dCur=dQueue[dP];
+  if(!dCur){ dFinishRound(); return; }
+  const s=dst(dCur.id), done=dState[dP];
+  document.getElementById('dModeLabel').innerHTML = dMode==='wrong' ? '<b style="color:var(--gold)">大题错题集</b>' : '第 <b>'+store.datiRound+'</b> 轮';
+  document.getElementById('dPos').textContent=dP+1; document.getElementById('dLen').textContent=dQueue.length;
+  document.getElementById('dPoolWrap').style.display = dMode==='wrong'?'none':'';
+  document.getElementById('dPoolLeft').textContent=dActivePool().length;
+  document.getElementById('dProg').style.width=((dP+(done?1:0))/dQueue.length*100)+'%';
+  const tag = dCur.type? `<span class="tag essay">${dCur.type==='论'?'论述':dCur.type==='材'?'材料':'简答'}</span>` : '<span class="tag essay">大题</span>';
+  document.getElementById('dQmeta').innerHTML = tag+`<span>${dCur.chapter}</span>`+
+    (s.last?`<span class="tag ${s.last==='掌握'?'single':s.last==='模糊'?'multi':'focus'}">上次:${s.last}</span>`:'')+
+    `<button class="markbtn ${dInSet(dCur)?'on':''}" onclick="dToggleMark()">${dInSet(dCur)?'在错题集 ✓':'加入错题集'}</button>`;
+  document.getElementById('dTitle').textContent = dCur.num+'. '+dCur.title;
+  const ta=document.getElementById('dTa');
+  if(done){ ta.value=done.input||''; ta.disabled=true; dShowReveal(done.submitted); }
+  else { ta.value=''; ta.disabled=false; document.getElementById('dInputWrap').classList.remove('hide'); document.getElementById('dReveal').classList.add('hide'); }
+  dUpdateFooter();
+}
+function dUpdateFooter(){
+  document.getElementById('dPrevBtn').disabled = dP===0;
+  document.getElementById('dNextBtn').textContent = dP>=dQueue.length-1? '结束本轮':'下一题';
+}
+function fmtAnswer(t){ return t.replace(/&/g,'&amp;').replace(/</g,'&lt;'); }
+function computeSim(input){
+  const kw=dCur.keywords||[];
+  if(kw.length===0) return null;
+  const norm=(input||'').replace(/[\s，。、；：（）()\.,;:]/g,'');
+  const hit=[], miss=[];
+  kw.forEach(w=> (norm.includes(w)? hit:miss).push(w));
+  return {pct: Math.round(hit.length/kw.length*100), hit, miss, total:kw.length};
+}
+function datiSubmit(){ const inp=document.getElementById('dTa').value; dState[dP]={input:inp, submitted:true, rating:null}; renderState(); }
+function datiReveal(_){ const inp=document.getElementById('dTa').value; dState[dP]={input:inp, submitted:false, rating:null}; renderState(); }
+function renderState(){ const ta=document.getElementById('dTa'); ta.disabled=true; dShowReveal(dState[dP].submitted); }
+function dShowReveal(submitted){
+  document.getElementById('dInputWrap').classList.add('hide');
+  const rv=document.getElementById('dReveal'); rv.classList.remove('hide');
+  const sim=document.getElementById('dSim');
+  if(submitted){
+    const r=computeSim(dState[dP].input);
+    if(r){
+      const color = r.pct>=70?'var(--ok)': r.pct>=40?'var(--warn)':'var(--bad)';
+      sim.className='simbox'; sim.innerHTML =
+        `<div class="row" style="align-items:baseline;gap:10px"><span class="simnum" style="color:${color}">${r.pct}%</span>`+
+        `<span class="mini">关键词覆盖率　命中 ${r.hit.length}/${r.total}</span></div>`+
+        `<div style="margin-top:10px">${r.hit.map(w=>`<span class="kw hit">${w}</span>`).join('')}${r.miss.map(w=>`<span class="kw miss">${w}</span>`).join('')}</div>`+
+        `<div class="mini" style="margin-top:6px">绿色=你写到了　灰色=遗漏（仅按关键词字面匹配，仅供参考）</div>`;
+    } else { sim.className='simbox'; sim.innerHTML='<div class="mini">本题未设关键词，直接对照标准答案自评即可。</div>'; }
+  } else { sim.className=''; sim.innerHTML=''; }
+  document.getElementById('dAns').textContent = dCur.answer;
+}
+function datiRate(r){
+  const s=dst(dCur.id); s.seen++; s.last=r;
+  if(r==='掌握'){ s.streak++; dRoundMaster++; if(s.streak>=store.master){ s.mastered=true; s.wrongFlag=false; } }
+  else { s.streak=0; s.mastered=false; s.wrongFlag=true; }
+  if(dState[dP]) dState[dP].rating=r;
+  dRoundSeen++; save();
+  if(dP>=dQueue.length-1) dFinishRound(); else { dP++; dRender(); }
+}
+function dToggleMark(){ const s=dst(dCur.id); if(dInSet(dCur)){ s.marked=false; s.wrongFlag=false; } else s.marked=true; save(); dRender(); }
+function dGoPrev(){ if(dP>0){ dP--; dRender(); } }
+function dGoNext(){ if(dP<dQueue.length-1){ dP++; dRender(); } else dFinishRound(); }
+function dOpenCard(){
+  const g=document.getElementById('dCardGrid'); g.innerHTML='';
+  dQueue.forEach((d,i)=>{
+    const a=dState[i], r=a&&a.rating; const el=document.createElement('div');
+    el.className='cell'+(r==='掌握'?' ok':r==='模糊'?' warn':r==='不会'?' bad':'')+(i===dP?' cur':'');
+    el.textContent=i+1; if(dInSet(d)) el.innerHTML+='<span class="dot"></span>';
+    el.onclick=()=>{ dCloseCard(); dP=i; dRender(); }; g.appendChild(el);
+  });
+  document.getElementById('dCardMask').classList.remove('hide');
+}
+function dCloseCard(){ document.getElementById('dCardMask').classList.add('hide'); }
+function dFinishRound(){
+  dCloseCard(); document.getElementById('dProg').style.width='100%';
+  show('roundDone'); document.getElementById('dFooter').classList.add('hide'); rdContext='dati';
+  if(dMode==='wrong'){
+    const left=dWrongPool().length;
+    document.getElementById('rdTitle').textContent = left===0?'大题错题集已清空！':'大题错题集练习完成';
+    document.getElementById('rdBody').innerHTML = `本轮自评 <b>${dRoundSeen}</b> 道，其中“掌握” <b>${dRoundMaster}</b> 道。`+(left===0?'':`<br>错题集还剩 <b style="color:var(--gold)">${left}</b> 道。`);
+    document.getElementById('rdNext').textContent='再刷一轮'; document.getElementById('rdNext').classList.toggle('hide', left===0);
+  } else {
+    const left=dActivePool().length;
+    document.getElementById('rdTitle').textContent = left===0?'全部掌握！':'第 '+store.datiRound+' 轮完成';
+    document.getElementById('rdBody').innerHTML = `本轮自评 <b>${dRoundSeen}</b> 道，其中“掌握” <b>${dRoundMaster}</b> 道。`+(left===0?'<br>所选大题全部掌握，漂亮！':`<br>还剩 <b style="color:var(--bad)">${left}</b> 道未掌握，下一轮优先重点提问。`);
+    document.getElementById('rdNext').textContent='下一轮（重点攻克）'; document.getElementById('rdNext').classList.toggle('hide', left===0);
+    store.datiRound++; save();
+  }
+  dRefresh();
+}
+function dNextRound(){ dBuildRound(); if(dQueue.length===0){ toHome(); return; } show('datiQuiz'); document.getElementById('dFooter').classList.remove('hide'); dRender(); }
+function showDatiBook(){ renderDatiBook(); show('datiBook'); }
+function renderDatiBook(){
+  const list=dWrongPool(), box=document.getElementById('dbBody');
+  if(list.length===0){ box.innerHTML='<div class="sub" style="margin-top:10px">大题错题集是空的。自评“模糊/不会”或点“加入错题集”的题会进来。</div>'; return; }
+  box.innerHTML='<div class="mini" style="margin:8px 0">共 '+list.length+' 道</div>'+list.map(d=>{ const s=dst(d.id);
+    return `<div class="review-item"><div class="qmeta"><span class="tag essay">${d.type==='论'?'论述':d.type==='材'?'材料':d.type==='简'?'简答':'大题'}</span><span>${d.chapter}</span>${s.last?`<span class="tag ${s.last==='掌握'?'single':s.last==='模糊'?'multi':'focus'}">${s.last}</span>`:''}<button class="markbtn" onclick="dRemoveFromSet('${d.id}')" style="margin-left:auto;border-color:var(--bad);color:var(--bad);background:var(--bad-soft)">移出</button></div>
+      <div style="font-weight:600">${d.num}. ${d.title}</div><div class="ansbox" style="margin-top:6px">${fmtAnswer(d.answer)}</div></div>`; }).join('');
+}
+function dRemoveFromSet(id){ const s=dst(id); s.marked=false; s.wrongFlag=false; save(); renderDatiBook(); dRefresh(); }
+function clearDatiSet(){ if(confirm('确定清空大题错题集？')){ Object.values(store.datiStats).forEach(s=>{s.marked=false;s.wrongFlag=false;}); save(); renderDatiBook(); dRefresh(); } }
+function resetDati(){ if(confirm('确定清空全部大题进度？')){ store.datiStats={}; store.datiRound=1; save(); dRefresh(); } }
+
+/* ========== shared ========== */
+let rdContext='choice';
+function rdNextAction(){ rdContext==='dati'? dNextRound() : nextRound(); }
+function show(id){ ['home','quiz','datiQuiz','roundDone','wrongBook','datiBook'].forEach(x=>document.getElementById(x).classList.add('hide')); document.getElementById(id).classList.remove('hide'); }
+function toHome(){ closeCard(); dCloseCard(); document.getElementById('footer').classList.add('hide'); document.getElementById('dFooter').classList.add('hide'); show('home'); renderChips(); refreshResume(); renderDChips(); dRefresh(); }
 function shuffle(a){ for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
 
 document.addEventListener('keydown',e=>{
   if(!document.getElementById('cardMask').classList.contains('hide')){ if(e.key==='Escape') closeCard(); return; }
-  if(document.getElementById('quiz').classList.contains('hide')) return;
-  if(e.key==='Enter'){ const b=document.getElementById('actBtn'); if(!b.disabled) onAction(); }
-  else if(e.key==='ArrowLeft') goPrev();
-  else if(e.key==='ArrowRight'){ if(answers[pos]) goNext(); }
-  else { const idx='1234'.indexOf(e.key); if(idx>=0 && !answers[pos]){ const el=document.querySelectorAll('.opt')[idx]; if(el) el.click(); } }
+  if(!document.getElementById('dCardMask').classList.contains('hide')){ if(e.key==='Escape') dCloseCard(); return; }
+  if(!document.getElementById('quiz').classList.contains('hide')){
+    if(e.key==='Enter'){ const b=document.getElementById('actBtn'); if(!b.disabled) onAction(); }
+    else if(e.key==='ArrowLeft') goPrev();
+    else if(e.key==='ArrowRight'){ if(answers[pos]) goNext(); }
+    else { const idx='1234'.indexOf(e.key); if(idx>=0 && !answers[pos]){ const el=document.querySelectorAll('#opts .opt')[idx]; if(el) el.click(); } }
+  }
 });
 
 /* init */
-renderChips(); refreshResume();
+renderChips(); refreshResume(); renderDChips(); dRefresh();
 </script>
 </body>
 </html>
